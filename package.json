@@ -8,6 +8,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:seed": "tsx src/db/seed.ts",
+    "db:setup": "pnpm db:migrate && pnpm db:seed",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "lint": "biome check ."

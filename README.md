@@ -3,24 +3,24 @@
 One platform for Brightloop Software's products, plans, quotations, subscriptions, recurring
 invoices, payments, discounts and finance reporting, with admin, staff and customer portal access.
 
-Built with TanStack Start, Drizzle ORM, Tailwind CSS and Supabase Postgres.
+Built with TanStack Start, Drizzle ORM, Tailwind CSS and PostgreSQL.
 
 ## Setup
 
-You need Node 24, pnpm and a Supabase project.
+You need Node 24, pnpm and PostgreSQL 16 or newer running on this machine.
 
 ```sh
 pnpm install
-cp .env.example .env    # then set DATABASE_URL
-pnpm db:migrate
-pnpm db:seed
+psql -U postgres -c "create role brightloop login password 'CHOOSE_A_PASSWORD'" -c "create database brightloop owner brightloop"
+cp .env.example .env    # then put the same password in DATABASE_URL
+pnpm db:setup           # applies the migrations, then loads the demo data
 pnpm dev
 ```
 
 Open <http://localhost:3000>.
 
-`DATABASE_URL` is the Session pooler URI from Supabase, under Project > Connect. It uses port 5432.
-The direct connection host is IPv6-only on the free plan.
+The app connects as `brightloop`, which owns the database, and never as the `postgres` superuser.
+Nothing else on the PostgreSQL server is touched.
 
 ## Demo accounts
 
@@ -32,13 +32,14 @@ The password for every account is `Brightloop@2026`.
 | Staff    | `staff@brightloop.example`                                      |
 | Customer | `asha@`, `vikram@`, `neha@`, `arjun@`, `priya@customer.example` |
 
-These passwords are public. Do not seed them into a live database, or change them first.
+These passwords are public. Do not seed them into a database other people can reach, or change
+them first.
 
 ## Email
 
 With `SMTP_HOST` empty, development prints emails to the server console, including password reset
 links. To use Mailpit instead, run `docker compose up -d`, set `SMTP_HOST=localhost`, and read mail
-at <http://localhost:8025>. Production needs a real SMTP provider, and reset emails fail without one.
+at <http://localhost:8025>. With `NODE_ENV=production` and no SMTP provider, reset emails fail.
 
 ## Scripts
 
@@ -47,6 +48,7 @@ at <http://localhost:8025>. Production needs a real SMTP provider, and reset ema
 | `pnpm dev`             | Starts the app on port 3000                       |
 | `pnpm db:generate`     | Writes a migration from `src/db/schema.ts`        |
 | `pnpm db:migrate`      | Applies migrations                                |
+| `pnpm db:setup`        | Runs `db:migrate`, then `db:seed`                 |
 | `pnpm db:seed`         | Adds demo data to an empty database               |
 | `pnpm db:seed --reset` | Wipes all data and reseeds; refused in production |
 | `pnpm test`            | Runs Vitest                                       |
@@ -55,12 +57,12 @@ at <http://localhost:8025>. Production needs a real SMTP provider, and reset ema
 
 ## Assumptions
 
-- Supabase replaces the local Docker Postgres in the original brief, because the app is going live.
+- The database is PostgreSQL installed on the machine, not Docker Postgres as in the original brief.
   See `docs/WORKING_RULES.md`.
-- Supabase is used as Postgres only. Authentication is custom: bcrypt passwords, hashed session and
-  reset tokens, and an httpOnly SameSite=Lax cookie.
-- Row Level Security is on for every table with no policies. This closes Supabase's Data API. The
-  app connects as the table owner, so it is unaffected.
+- Authentication is custom: bcrypt passwords, hashed session and reset tokens, and an httpOnly
+  SameSite=Lax cookie.
+- Row Level Security is on for every table with no policies. The app connects as the table owner, so
+  it is unaffected, and any other role is locked out. This is defence in depth.
 - Sessions last 7 days. Resetting a password signs out all of that user's sessions.
 - Business dates follow the Asia/Kolkata calendar, whatever time zone the server runs in.
 - `discounts.value` is a whole percent for percent discounts and paise for fixed discounts.
@@ -98,5 +100,5 @@ at <http://localhost:8025>. Production needs a real SMTP provider, and reset ema
 - Only one tax rule can be the default. Saving a new default demotes the old one.
 - Inactive products and plans cannot be added to new subscriptions.
 - Subscription numbers come from a Postgres sequence, so a failed create can leave a gap.
-- The seed adds 17 subscriptions across every status. One quotation is already expired, one plan
+- The seed adds 16 subscriptions across every status. One quotation is already expired, one plan
   (Launch offer) is past its availability window, and the last draft is a renewal of the closed one.

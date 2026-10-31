@@ -2,16 +2,17 @@
 
 ## Owner amendment (2026-10-31)
 
-The project owner moved the database to Supabase because the app is going live. Where the rules
-below conflict with this list, this list wins.
+The project owner chose the PostgreSQL service installed on this machine instead of Docker.
+Where the rules below conflict with this list, this list wins.
 
-- Database: hosted Supabase Postgres via `DATABASE_URL`, not local Docker Postgres. Supabase is used
-  as Postgres only. Auth stays custom, as specified in the build prompt.
-- RLS is enabled on every table, with no policies, because Supabase exposes `public` through its
-  Data API. Every new table must call `.enableRLS()`.
-- Email: SMTP settings come from env vars. Mailpit is an optional local tool, and live needs a real
-  SMTP provider.
-- Rule 2 "Offline friendly" no longer applies to the database or to email.
+- Database: local PostgreSQL via `DATABASE_URL`, using a dedicated `brightloop` role that owns the
+  `brightloop` database. Docker is not needed for the database. Auth stays custom, as specified in
+  the build prompt.
+- RLS is enabled on every table, with no policies, as defence in depth. Every new table must call
+  `.enableRLS()`, and the app role must own its tables.
+- Email: SMTP settings come from env vars. Mailpit is an optional local tool, and anything
+  deployed needs a real SMTP provider.
+- Rule 2 "Offline friendly" still holds for the database. It no longer requires Docker.
 
 ## Rules as given
 

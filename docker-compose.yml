@@ -1,4 +1,5 @@
-# Optional local mail catcher. The database is Supabase, so nothing else runs here.
+# Optional local mail catcher. The database is the PostgreSQL service on this machine, so nothing
+# else runs here.
 services:
   mailpit:
     image: axllent/mailpit:latest

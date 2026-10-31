@@ -18,8 +18,8 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core'
 
-// Every table calls enableRLS() and has no policies. Supabase exposes `public` through its
-// Data API, so RLS blocks that route. The app connects as the table owner and is unaffected.
+// Every table calls enableRLS() and has no policies, so only the owning role can read or write it.
+// This is defence in depth: the app connects as the table owner and is unaffected.
 
 /** Money is always integer paise. */
 const money = (name: string) => bigint(name, { mode: 'number' })

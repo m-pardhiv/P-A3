@@ -8,8 +8,7 @@ const isLocal = /@(localhost|127\.0\.0\.1)[:/]/.test(env.DATABASE_URL)
 export function createClient(max: number) {
   return postgres(env.DATABASE_URL, {
     max,
-    // Supabase's transaction pooler cannot use prepared statements.
-    prepare: false,
+    // Local Postgres does not offer TLS; any other host must use it.
     ssl: isLocal ? false : 'require',
     onnotice: () => {},
   })
