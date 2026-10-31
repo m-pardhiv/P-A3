@@ -19,7 +19,7 @@ pnpm db:setup           # applies the migrations, then loads the demo data
 pnpm dev
 ```
 
-Open <http://localhost:3000>. Run `pnpm test` to check everything.
+Open <http://localhost:3000>. Run `pnpm test` to check everything
 
 The app connects as `brightloop`, which owns the database, and never as the `postgres` superuser.
 The tests use `brightloop_test` and refuse to run against any database whose name does not end in
