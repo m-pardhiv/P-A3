@@ -5,3 +5,6 @@ dist
 .tanstack
 .nitro
 *.log
+
+# Screen recording for the submission, shared separately
+demo-video/
