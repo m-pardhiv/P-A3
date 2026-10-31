@@ -127,8 +127,16 @@ production and on any database that is not on this machine.
 
 ## Email
 
-With `SMTP_HOST` empty, development prints emails to the server console, including password reset
-links and sent invoices. To use Mailpit instead, run `docker compose up -d`, set
+Emails go out through one of three routes, chosen from `.env`:
+
+1. **Resend:** set `RESEND_API_KEY` (and a `MAIL_FROM` on a domain verified in Resend, or
+   `Brightloop <onboarding@resend.dev>` to test: that sender only delivers to your own Resend
+   account email). Resend is used whenever the key is set.
+2. **SMTP:** set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER` and `SMTP_PASS`.
+3. **Neither:** development prints emails to the server console, including password reset
+   links and sent invoices.
+
+Password reset, invoices, quotations and payment reminders all use this one sender. To use Mailpit instead, run `docker compose up -d`, set
 `SMTP_HOST=localhost`, and read mail at <http://localhost:8025>. With `NODE_ENV=production` and no
 SMTP provider, emails fail.
 

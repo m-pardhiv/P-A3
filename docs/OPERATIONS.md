@@ -9,8 +9,8 @@ README.
 - One always-on Node process. The daily billing job is a timer inside the server, so a
   serverless host that sleeps between requests will skip billing unless you also call the
   Billing page's run (or restart the process) each day.
-- A real SMTP provider. With `NODE_ENV=production` and no `SMTP_HOST`, password reset, invoice,
-  quotation and reminder emails all fail, and say so.
+- An email provider: Resend (`RESEND_API_KEY`) or any SMTP server. With `NODE_ENV=production` and
+  neither, password reset, invoice, quotation and reminder emails all fail, and say so.
 
 ## First deployment
 
@@ -59,7 +59,8 @@ Set `APP_URL` to the https address and `TRUST_PROXY=true`. The session cookie is
   `{"time":"...","level":"error","event":"billing_subscription_failed","error":"..."}`. Ship them
   to any log collector. Events worth alerting on: `billing_subscription_failed`,
   `scheduled_billing_failed`, `invoice_email_failed`, `quotation_email_failed`,
-  `payment_reminder_failed`, `password_reset_email_failed`, `health_check_failed`.
+  `payment_reminder_failed`, `password_reset_email_failed`, `health_check_failed`. A Resend refusal logs its reason, for example
+  an unverified sender domain, and never the key.
 - Every billing run is stored with its counts and errors. See Billing > Run history.
 - Errors shown to users never include database text.
 
