@@ -47,7 +47,9 @@ function monthlyStartDueToday(atLeastMonths: number) {
 const db = createDb(1)
 const client = db.$client
 
-const reset = process.argv.includes('--reset')
+// --empty wipes everything and keeps only the admin and staff logins, for a build-it-live start.
+const empty = process.argv.includes('--empty')
+const reset = process.argv.includes('--reset') || empty
 const blocker = seedBlocker({
   nodeEnv: process.env.NODE_ENV,
   databaseUrl: env.DATABASE_URL,
@@ -75,6 +77,22 @@ if (reset) {
 }
 
 const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 12)
+
+if (empty) {
+  await db.insert(users).values([
+    { email: 'admin@brightloop.example', name: 'Meera Iyer', passwordHash, role: 'admin' },
+    { email: 'staff@brightloop.example', name: 'Rohan Kulkarni', passwordHash, role: 'staff' },
+  ])
+  console.log(`
+Clean start. No products, plans, customers, subscriptions or invoices.
+Sign in with (password ${DEMO_PASSWORD}):
+  admin     admin@brightloop.example
+  staff     staff@brightloop.example
+Customers can sign up themselves on the sign-up page.
+`)
+  await client.end()
+  process.exit(0)
+}
 
 const { adminId, staffId } = await db.transaction(async (tx) => {
   const [admin, staff] = await tx

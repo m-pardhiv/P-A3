@@ -101,6 +101,7 @@ flowchart LR
 | `pnpm db:migrate`      | Applies migrations                                                         |
 | `pnpm db:seed`         | Adds demo data, with billing history, to an empty database                 |
 | `pnpm db:seed --reset` | Wipes all data and reseeds; refused in production                          |
+| `pnpm db:seed --empty` | Wipes all data and keeps only the admin and staff logins                   |
 | `pnpm db:setup`        | Runs `db:migrate`, then `db:seed`                                          |
 | `pnpm db:seed:perf`    | Adds about 5,000 subscriptions and 30,000 invoices; `--clean` removes them |
 | `pnpm db:explain`      | Runs `EXPLAIN ANALYZE` on the dashboard queries                            |
