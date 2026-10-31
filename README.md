@@ -70,3 +70,33 @@ at <http://localhost:8025>. Production needs a real SMTP provider, and reset ema
 - `invoice_lines` allows negative amounts, because discounts are negative lines.
 - `subscriptions.expiry_date` is optional, for open-ended subscriptions.
 - Only one active tax rule can be the default, enforced by a partial unique index.
+
+### Catalogue and subscriptions
+
+- A subscription's first line is the plan's base fee. It has no product, uses the default tax rule,
+  and its quantity is the "plan quantity", which must meet the plan's minimum.
+- A line's unit price and tax rate are copied when the line is added. Changing a product's price or a
+  tax rule later does not change existing lines. Saving a line without changing its product or
+  variant keeps its copied values; changing either reprices it.
+- Tax is calculated per line and rounded half-up. Prices are tax-exclusive.
+- Money is typed in rupees (such as `1200.50`) and stored as integer paise.
+- `quotation_valid_until` is set only for subscriptions created from a template (creation date plus
+  the template's validity days). A subscription made from scratch has no validity limit.
+- Staff and admin can both create and edit templates. Only admin edits products, plans, taxes and
+  payment terms; staff see products and plans read-only.
+- Moves are defined in one table in `src/server/domain/subscription-state.ts`:
+  Draft to Quotation to Confirmed to Active, with Pause and Resume between Active and Paused.
+  A subscription can be closed from any state, but a running one (Active or Paused) can only be
+  closed before its expiry date if the plan allows early close.
+- Activate is a button that works once the start date has arrived. Part 3's billing run will also
+  activate confirmed subscriptions whose start date has come.
+- Renew is offered on Active and Closed subscriptions, once only, and needs an expiry date. It
+  creates a Draft with the same lines, starting the day after expiry and lasting the same number of
+  days.
+- Closing a subscription clears its next invoice date. Closing at expiry on `auto_close` plans is
+  Part 3's job; the rule is `shouldAutoClose` in the state module.
+- Only one tax rule can be the default. Saving a new default demotes the old one.
+- Inactive products and plans cannot be added to new subscriptions.
+- Subscription numbers come from a Postgres sequence, so a failed create can leave a gap.
+- The seed adds 17 subscriptions across every status. One quotation is already expired, one plan
+  (Launch offer) is past its availability window, and the last draft is a renewal of the closed one.

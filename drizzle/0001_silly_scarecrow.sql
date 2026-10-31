@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "subscriptions_renewed_from_idx" ON "subscriptions" USING btree ("renewed_from_id");

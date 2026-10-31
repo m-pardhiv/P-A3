@@ -20,8 +20,6 @@ import { Route as AppAdminRouteImport } from './routes/_app/_admin'
 import { Route as AppBillingRouteImport } from './routes/_app/billing'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppPaymentsRouteImport } from './routes/_app/payments'
-import { Route as AppPlansRouteImport } from './routes/_app/plans'
-import { Route as AppQuotationTemplatesRouteImport } from './routes/_app/quotation-templates'
 import { Route as PortalIndexRouteImport } from './routes/portal/index'
 import { Route as PortalProfileRouteImport } from './routes/portal/profile'
 import { Route as AppAdminDiscountsRouteImport } from './routes/_app/_admin/discounts'
@@ -30,12 +28,21 @@ import { Route as AppAdminStaffRouteImport } from './routes/_app/_admin/staff'
 import { Route as AppAdminTaxesRouteImport } from './routes/_app/_admin/taxes'
 import { Route as AppCustomersIndexRouteImport } from './routes/_app/customers/index'
 import { Route as AppCustomersIdRouteImport } from './routes/_app/customers/$id'
+import { Route as AppCustomersNewRouteImport } from './routes/_app/customers/new'
 import { Route as AppInvoicesIndexRouteImport } from './routes/_app/invoices/index'
 import { Route as AppInvoicesIdRouteImport } from './routes/_app/invoices/$id'
+import { Route as AppPlansIndexRouteImport } from './routes/_app/plans/index'
+import { Route as AppPlansIdRouteImport } from './routes/_app/plans/$id'
+import { Route as AppPlansNewRouteImport } from './routes/_app/plans/new'
 import { Route as AppProductsIndexRouteImport } from './routes/_app/products/index'
 import { Route as AppProductsIdRouteImport } from './routes/_app/products/$id'
+import { Route as AppProductsNewRouteImport } from './routes/_app/products/new'
+import { Route as AppQuotationTemplatesIndexRouteImport } from './routes/_app/quotation-templates/index'
+import { Route as AppQuotationTemplatesIdRouteImport } from './routes/_app/quotation-templates/$id'
+import { Route as AppQuotationTemplatesNewRouteImport } from './routes/_app/quotation-templates/new'
 import { Route as AppSubscriptionsIndexRouteImport } from './routes/_app/subscriptions/index'
 import { Route as AppSubscriptionsIdRouteImport } from './routes/_app/subscriptions/$id'
+import { Route as AppSubscriptionsNewRouteImport } from './routes/_app/subscriptions/new'
 import { Route as PortalInvoicesIndexRouteImport } from './routes/portal/invoices/index'
 import { Route as PortalInvoicesIdRouteImport } from './routes/portal/invoices/$id'
 import { Route as PortalSubscriptionsIndexRouteImport } from './routes/portal/subscriptions/index'
@@ -94,16 +101,6 @@ const AppPaymentsRoute = AppPaymentsRouteImport.update({
   path: '/payments',
   getParentRoute: () => AppRoute,
 } as any)
-const AppPlansRoute = AppPlansRouteImport.update({
-  id: '/plans',
-  path: '/plans',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppQuotationTemplatesRoute = AppQuotationTemplatesRouteImport.update({
-  id: '/quotation-templates',
-  path: '/quotation-templates',
-  getParentRoute: () => AppRoute,
-} as any)
 const PortalIndexRoute = PortalIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -144,6 +141,11 @@ const AppCustomersIdRoute = AppCustomersIdRouteImport.update({
   path: '/customers/$id',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCustomersNewRoute = AppCustomersNewRouteImport.update({
+  id: '/customers/new',
+  path: '/customers/new',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppInvoicesIndexRoute = AppInvoicesIndexRouteImport.update({
   id: '/invoices/',
   path: '/invoices/',
@@ -152,6 +154,21 @@ const AppInvoicesIndexRoute = AppInvoicesIndexRouteImport.update({
 const AppInvoicesIdRoute = AppInvoicesIdRouteImport.update({
   id: '/invoices/$id',
   path: '/invoices/$id',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPlansIndexRoute = AppPlansIndexRouteImport.update({
+  id: '/plans/',
+  path: '/plans/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPlansIdRoute = AppPlansIdRouteImport.update({
+  id: '/plans/$id',
+  path: '/plans/$id',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPlansNewRoute = AppPlansNewRouteImport.update({
+  id: '/plans/new',
+  path: '/plans/new',
   getParentRoute: () => AppRoute,
 } as any)
 const AppProductsIndexRoute = AppProductsIndexRouteImport.update({
@@ -164,6 +181,28 @@ const AppProductsIdRoute = AppProductsIdRouteImport.update({
   path: '/products/$id',
   getParentRoute: () => AppRoute,
 } as any)
+const AppProductsNewRoute = AppProductsNewRouteImport.update({
+  id: '/products/new',
+  path: '/products/new',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppQuotationTemplatesIndexRoute =
+  AppQuotationTemplatesIndexRouteImport.update({
+    id: '/quotation-templates/',
+    path: '/quotation-templates/',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppQuotationTemplatesIdRoute = AppQuotationTemplatesIdRouteImport.update({
+  id: '/quotation-templates/$id',
+  path: '/quotation-templates/$id',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppQuotationTemplatesNewRoute =
+  AppQuotationTemplatesNewRouteImport.update({
+    id: '/quotation-templates/new',
+    path: '/quotation-templates/new',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppSubscriptionsIndexRoute = AppSubscriptionsIndexRouteImport.update({
   id: '/subscriptions/',
   path: '/subscriptions/',
@@ -172,6 +211,11 @@ const AppSubscriptionsIndexRoute = AppSubscriptionsIndexRouteImport.update({
 const AppSubscriptionsIdRoute = AppSubscriptionsIdRouteImport.update({
   id: '/subscriptions/$id',
   path: '/subscriptions/$id',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSubscriptionsNewRoute = AppSubscriptionsNewRouteImport.update({
+  id: '/subscriptions/new',
+  path: '/subscriptions/new',
   getParentRoute: () => AppRoute,
 } as any)
 const PortalInvoicesIndexRoute = PortalInvoicesIndexRouteImport.update({
@@ -206,8 +250,6 @@ export interface FileRoutesByFullPath {
   '/billing': typeof AppBillingRoute
   '/dashboard': typeof AppDashboardRoute
   '/payments': typeof AppPaymentsRoute
-  '/plans': typeof AppPlansRoute
-  '/quotation-templates': typeof AppQuotationTemplatesRoute
   '/portal/profile': typeof PortalProfileRoute
   '/portal/': typeof PortalIndexRoute
   '/discounts': typeof AppAdminDiscountsRoute
@@ -215,14 +257,23 @@ export interface FileRoutesByFullPath {
   '/staff': typeof AppAdminStaffRoute
   '/taxes': typeof AppAdminTaxesRoute
   '/customers/$id': typeof AppCustomersIdRoute
+  '/customers/new': typeof AppCustomersNewRoute
   '/invoices/$id': typeof AppInvoicesIdRoute
+  '/plans/$id': typeof AppPlansIdRoute
+  '/plans/new': typeof AppPlansNewRoute
   '/products/$id': typeof AppProductsIdRoute
+  '/products/new': typeof AppProductsNewRoute
+  '/quotation-templates/$id': typeof AppQuotationTemplatesIdRoute
+  '/quotation-templates/new': typeof AppQuotationTemplatesNewRoute
   '/subscriptions/$id': typeof AppSubscriptionsIdRoute
+  '/subscriptions/new': typeof AppSubscriptionsNewRoute
   '/portal/invoices/$id': typeof PortalInvoicesIdRoute
   '/portal/subscriptions/$id': typeof PortalSubscriptionsIdRoute
   '/customers/': typeof AppCustomersIndexRoute
   '/invoices/': typeof AppInvoicesIndexRoute
+  '/plans/': typeof AppPlansIndexRoute
   '/products/': typeof AppProductsIndexRoute
+  '/quotation-templates/': typeof AppQuotationTemplatesIndexRoute
   '/subscriptions/': typeof AppSubscriptionsIndexRoute
   '/portal/invoices/': typeof PortalInvoicesIndexRoute
   '/portal/subscriptions/': typeof PortalSubscriptionsIndexRoute
@@ -236,8 +287,6 @@ export interface FileRoutesByTo {
   '/billing': typeof AppBillingRoute
   '/dashboard': typeof AppDashboardRoute
   '/payments': typeof AppPaymentsRoute
-  '/plans': typeof AppPlansRoute
-  '/quotation-templates': typeof AppQuotationTemplatesRoute
   '/portal/profile': typeof PortalProfileRoute
   '/portal': typeof PortalIndexRoute
   '/discounts': typeof AppAdminDiscountsRoute
@@ -245,14 +294,23 @@ export interface FileRoutesByTo {
   '/staff': typeof AppAdminStaffRoute
   '/taxes': typeof AppAdminTaxesRoute
   '/customers/$id': typeof AppCustomersIdRoute
+  '/customers/new': typeof AppCustomersNewRoute
   '/invoices/$id': typeof AppInvoicesIdRoute
+  '/plans/$id': typeof AppPlansIdRoute
+  '/plans/new': typeof AppPlansNewRoute
   '/products/$id': typeof AppProductsIdRoute
+  '/products/new': typeof AppProductsNewRoute
+  '/quotation-templates/$id': typeof AppQuotationTemplatesIdRoute
+  '/quotation-templates/new': typeof AppQuotationTemplatesNewRoute
   '/subscriptions/$id': typeof AppSubscriptionsIdRoute
+  '/subscriptions/new': typeof AppSubscriptionsNewRoute
   '/portal/invoices/$id': typeof PortalInvoicesIdRoute
   '/portal/subscriptions/$id': typeof PortalSubscriptionsIdRoute
   '/customers': typeof AppCustomersIndexRoute
   '/invoices': typeof AppInvoicesIndexRoute
+  '/plans': typeof AppPlansIndexRoute
   '/products': typeof AppProductsIndexRoute
+  '/quotation-templates': typeof AppQuotationTemplatesIndexRoute
   '/subscriptions': typeof AppSubscriptionsIndexRoute
   '/portal/invoices': typeof PortalInvoicesIndexRoute
   '/portal/subscriptions': typeof PortalSubscriptionsIndexRoute
@@ -270,8 +328,6 @@ export interface FileRoutesById {
   '/_app/billing': typeof AppBillingRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/payments': typeof AppPaymentsRoute
-  '/_app/plans': typeof AppPlansRoute
-  '/_app/quotation-templates': typeof AppQuotationTemplatesRoute
   '/portal/profile': typeof PortalProfileRoute
   '/portal/': typeof PortalIndexRoute
   '/_app/_admin/discounts': typeof AppAdminDiscountsRoute
@@ -279,14 +335,23 @@ export interface FileRoutesById {
   '/_app/_admin/staff': typeof AppAdminStaffRoute
   '/_app/_admin/taxes': typeof AppAdminTaxesRoute
   '/_app/customers/$id': typeof AppCustomersIdRoute
+  '/_app/customers/new': typeof AppCustomersNewRoute
   '/_app/invoices/$id': typeof AppInvoicesIdRoute
+  '/_app/plans/$id': typeof AppPlansIdRoute
+  '/_app/plans/new': typeof AppPlansNewRoute
   '/_app/products/$id': typeof AppProductsIdRoute
+  '/_app/products/new': typeof AppProductsNewRoute
+  '/_app/quotation-templates/$id': typeof AppQuotationTemplatesIdRoute
+  '/_app/quotation-templates/new': typeof AppQuotationTemplatesNewRoute
   '/_app/subscriptions/$id': typeof AppSubscriptionsIdRoute
+  '/_app/subscriptions/new': typeof AppSubscriptionsNewRoute
   '/portal/invoices/$id': typeof PortalInvoicesIdRoute
   '/portal/subscriptions/$id': typeof PortalSubscriptionsIdRoute
   '/_app/customers/': typeof AppCustomersIndexRoute
   '/_app/invoices/': typeof AppInvoicesIndexRoute
+  '/_app/plans/': typeof AppPlansIndexRoute
   '/_app/products/': typeof AppProductsIndexRoute
+  '/_app/quotation-templates/': typeof AppQuotationTemplatesIndexRoute
   '/_app/subscriptions/': typeof AppSubscriptionsIndexRoute
   '/portal/invoices/': typeof PortalInvoicesIndexRoute
   '/portal/subscriptions/': typeof PortalSubscriptionsIndexRoute
@@ -303,8 +368,6 @@ export interface FileRouteTypes {
     | '/billing'
     | '/dashboard'
     | '/payments'
-    | '/plans'
-    | '/quotation-templates'
     | '/portal/profile'
     | '/portal/'
     | '/discounts'
@@ -312,14 +375,23 @@ export interface FileRouteTypes {
     | '/staff'
     | '/taxes'
     | '/customers/$id'
+    | '/customers/new'
     | '/invoices/$id'
+    | '/plans/$id'
+    | '/plans/new'
     | '/products/$id'
+    | '/products/new'
+    | '/quotation-templates/$id'
+    | '/quotation-templates/new'
     | '/subscriptions/$id'
+    | '/subscriptions/new'
     | '/portal/invoices/$id'
     | '/portal/subscriptions/$id'
     | '/customers/'
     | '/invoices/'
+    | '/plans/'
     | '/products/'
+    | '/quotation-templates/'
     | '/subscriptions/'
     | '/portal/invoices/'
     | '/portal/subscriptions/'
@@ -333,8 +405,6 @@ export interface FileRouteTypes {
     | '/billing'
     | '/dashboard'
     | '/payments'
-    | '/plans'
-    | '/quotation-templates'
     | '/portal/profile'
     | '/portal'
     | '/discounts'
@@ -342,14 +412,23 @@ export interface FileRouteTypes {
     | '/staff'
     | '/taxes'
     | '/customers/$id'
+    | '/customers/new'
     | '/invoices/$id'
+    | '/plans/$id'
+    | '/plans/new'
     | '/products/$id'
+    | '/products/new'
+    | '/quotation-templates/$id'
+    | '/quotation-templates/new'
     | '/subscriptions/$id'
+    | '/subscriptions/new'
     | '/portal/invoices/$id'
     | '/portal/subscriptions/$id'
     | '/customers'
     | '/invoices'
+    | '/plans'
     | '/products'
+    | '/quotation-templates'
     | '/subscriptions'
     | '/portal/invoices'
     | '/portal/subscriptions'
@@ -366,8 +445,6 @@ export interface FileRouteTypes {
     | '/_app/billing'
     | '/_app/dashboard'
     | '/_app/payments'
-    | '/_app/plans'
-    | '/_app/quotation-templates'
     | '/portal/profile'
     | '/portal/'
     | '/_app/_admin/discounts'
@@ -375,14 +452,23 @@ export interface FileRouteTypes {
     | '/_app/_admin/staff'
     | '/_app/_admin/taxes'
     | '/_app/customers/$id'
+    | '/_app/customers/new'
     | '/_app/invoices/$id'
+    | '/_app/plans/$id'
+    | '/_app/plans/new'
     | '/_app/products/$id'
+    | '/_app/products/new'
+    | '/_app/quotation-templates/$id'
+    | '/_app/quotation-templates/new'
     | '/_app/subscriptions/$id'
+    | '/_app/subscriptions/new'
     | '/portal/invoices/$id'
     | '/portal/subscriptions/$id'
     | '/_app/customers/'
     | '/_app/invoices/'
+    | '/_app/plans/'
     | '/_app/products/'
+    | '/_app/quotation-templates/'
     | '/_app/subscriptions/'
     | '/portal/invoices/'
     | '/portal/subscriptions/'
@@ -477,20 +563,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPaymentsRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/plans': {
-      id: '/_app/plans'
-      path: '/plans'
-      fullPath: '/plans'
-      preLoaderRoute: typeof AppPlansRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/quotation-templates': {
-      id: '/_app/quotation-templates'
-      path: '/quotation-templates'
-      fullPath: '/quotation-templates'
-      preLoaderRoute: typeof AppQuotationTemplatesRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/portal/': {
       id: '/portal/'
       path: '/'
@@ -547,6 +619,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCustomersIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/customers/new': {
+      id: '/_app/customers/new'
+      path: '/customers/new'
+      fullPath: '/customers/new'
+      preLoaderRoute: typeof AppCustomersNewRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/invoices/': {
       id: '/_app/invoices/'
       path: '/invoices'
@@ -559,6 +638,27 @@ declare module '@tanstack/react-router' {
       path: '/invoices/$id'
       fullPath: '/invoices/$id'
       preLoaderRoute: typeof AppInvoicesIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/plans/': {
+      id: '/_app/plans/'
+      path: '/plans'
+      fullPath: '/plans/'
+      preLoaderRoute: typeof AppPlansIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/plans/$id': {
+      id: '/_app/plans/$id'
+      path: '/plans/$id'
+      fullPath: '/plans/$id'
+      preLoaderRoute: typeof AppPlansIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/plans/new': {
+      id: '/_app/plans/new'
+      path: '/plans/new'
+      fullPath: '/plans/new'
+      preLoaderRoute: typeof AppPlansNewRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/products/': {
@@ -575,6 +675,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProductsIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/products/new': {
+      id: '/_app/products/new'
+      path: '/products/new'
+      fullPath: '/products/new'
+      preLoaderRoute: typeof AppProductsNewRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/quotation-templates/': {
+      id: '/_app/quotation-templates/'
+      path: '/quotation-templates'
+      fullPath: '/quotation-templates/'
+      preLoaderRoute: typeof AppQuotationTemplatesIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/quotation-templates/$id': {
+      id: '/_app/quotation-templates/$id'
+      path: '/quotation-templates/$id'
+      fullPath: '/quotation-templates/$id'
+      preLoaderRoute: typeof AppQuotationTemplatesIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/quotation-templates/new': {
+      id: '/_app/quotation-templates/new'
+      path: '/quotation-templates/new'
+      fullPath: '/quotation-templates/new'
+      preLoaderRoute: typeof AppQuotationTemplatesNewRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/subscriptions/': {
       id: '/_app/subscriptions/'
       path: '/subscriptions'
@@ -587,6 +715,13 @@ declare module '@tanstack/react-router' {
       path: '/subscriptions/$id'
       fullPath: '/subscriptions/$id'
       preLoaderRoute: typeof AppSubscriptionsIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/subscriptions/new': {
+      id: '/_app/subscriptions/new'
+      path: '/subscriptions/new'
+      fullPath: '/subscriptions/new'
+      preLoaderRoute: typeof AppSubscriptionsNewRouteImport
       parentRoute: typeof AppRoute
     }
     '/portal/invoices/': {
@@ -643,15 +778,22 @@ interface AppRouteChildren {
   AppBillingRoute: typeof AppBillingRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppPaymentsRoute: typeof AppPaymentsRoute
-  AppPlansRoute: typeof AppPlansRoute
-  AppQuotationTemplatesRoute: typeof AppQuotationTemplatesRoute
   AppCustomersIdRoute: typeof AppCustomersIdRoute
+  AppCustomersNewRoute: typeof AppCustomersNewRoute
   AppInvoicesIdRoute: typeof AppInvoicesIdRoute
+  AppPlansIdRoute: typeof AppPlansIdRoute
+  AppPlansNewRoute: typeof AppPlansNewRoute
   AppProductsIdRoute: typeof AppProductsIdRoute
+  AppProductsNewRoute: typeof AppProductsNewRoute
+  AppQuotationTemplatesIdRoute: typeof AppQuotationTemplatesIdRoute
+  AppQuotationTemplatesNewRoute: typeof AppQuotationTemplatesNewRoute
   AppSubscriptionsIdRoute: typeof AppSubscriptionsIdRoute
+  AppSubscriptionsNewRoute: typeof AppSubscriptionsNewRoute
   AppCustomersIndexRoute: typeof AppCustomersIndexRoute
   AppInvoicesIndexRoute: typeof AppInvoicesIndexRoute
+  AppPlansIndexRoute: typeof AppPlansIndexRoute
   AppProductsIndexRoute: typeof AppProductsIndexRoute
+  AppQuotationTemplatesIndexRoute: typeof AppQuotationTemplatesIndexRoute
   AppSubscriptionsIndexRoute: typeof AppSubscriptionsIndexRoute
 }
 
@@ -660,15 +802,22 @@ const AppRouteChildren: AppRouteChildren = {
   AppBillingRoute: AppBillingRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppPaymentsRoute: AppPaymentsRoute,
-  AppPlansRoute: AppPlansRoute,
-  AppQuotationTemplatesRoute: AppQuotationTemplatesRoute,
   AppCustomersIdRoute: AppCustomersIdRoute,
+  AppCustomersNewRoute: AppCustomersNewRoute,
   AppInvoicesIdRoute: AppInvoicesIdRoute,
+  AppPlansIdRoute: AppPlansIdRoute,
+  AppPlansNewRoute: AppPlansNewRoute,
   AppProductsIdRoute: AppProductsIdRoute,
+  AppProductsNewRoute: AppProductsNewRoute,
+  AppQuotationTemplatesIdRoute: AppQuotationTemplatesIdRoute,
+  AppQuotationTemplatesNewRoute: AppQuotationTemplatesNewRoute,
   AppSubscriptionsIdRoute: AppSubscriptionsIdRoute,
+  AppSubscriptionsNewRoute: AppSubscriptionsNewRoute,
   AppCustomersIndexRoute: AppCustomersIndexRoute,
   AppInvoicesIndexRoute: AppInvoicesIndexRoute,
+  AppPlansIndexRoute: AppPlansIndexRoute,
   AppProductsIndexRoute: AppProductsIndexRoute,
+  AppQuotationTemplatesIndexRoute: AppQuotationTemplatesIndexRoute,
   AppSubscriptionsIndexRoute: AppSubscriptionsIndexRoute,
 }
 

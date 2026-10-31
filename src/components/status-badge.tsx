@@ -18,6 +18,7 @@ const statusTones: Record<string, keyof typeof toneClasses> = {
   overdue: 'danger',
   admin: 'info',
   staff: 'neutral',
+  inactive: 'neutral',
 }
 
 export function StatusBadge({ status }: { status: string }) {

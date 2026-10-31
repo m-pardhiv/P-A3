@@ -8,6 +8,13 @@
       "when": 1793425239417,
       "tag": "0000_exotic_mach_iv",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793428547606,
+      "tag": "0001_silly_scarecrow",
+      "breakpoints": true
     }
   ]
 }

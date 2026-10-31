@@ -6,15 +6,21 @@ import type { ActionResult, FieldErrors } from '~/shared/result'
 function toFieldErrors(error: z.ZodError): FieldErrors {
   const errors: FieldErrors = {}
   for (const issue of error.issues) {
-    errors[String(issue.path[0])] ??= issue.message
+    errors[issue.path.join('.')] ??= issue.message
   }
   return errors
 }
 
-/** Runs a form through the same Zod schema the server uses, then maps failures to fields. */
+/**
+ * Checks a form with the same Zod schema the server uses, then maps failures to fields.
+ * It sends the raw values, not the parsed ones: schemas such as money transform their input,
+ * and the server runs that same transform.
+ */
 export function useZodForm<TSchema extends z.ZodType, TData>(options: {
   schema: TSchema
-  submit: (data: z.output<TSchema>) => Promise<ActionResult<TData>>
+  /** Values held in state rather than inputs, such as repeating lines. */
+  values?: () => Record<string, unknown>
+  submit: (data: z.input<TSchema>) => Promise<ActionResult<TData>>
   onSuccess: (data: TData, form: HTMLFormElement) => void
 }) {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
@@ -26,7 +32,8 @@ export function useZodForm<TSchema extends z.ZodType, TData>(options: {
     const form = event.currentTarget
     setFormError(undefined)
 
-    const parsed = options.schema.safeParse(Object.fromEntries(new FormData(form)))
+    const raw = { ...Object.fromEntries(new FormData(form)), ...options.values?.() }
+    const parsed = options.schema.safeParse(raw)
     if (!parsed.success) {
       setFieldErrors(toFieldErrors(parsed.error))
       return
@@ -34,7 +41,7 @@ export function useZodForm<TSchema extends z.ZodType, TData>(options: {
     setFieldErrors({})
 
     try {
-      const result = await mutation.mutateAsync(parsed.data)
+      const result = await mutation.mutateAsync(raw as z.input<TSchema>)
       if (result.ok) {
         options.onSuccess(result.data, form)
       } else {

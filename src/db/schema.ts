@@ -308,6 +308,8 @@ export const subscriptions = pgTable(
       .on(t.nextInvoiceDate)
       .where(sql`${t.status} = 'active'`),
     index('subscriptions_customer_id_idx').on(t.customerId),
+    // A subscription can only be renewed once, so a double click cannot create two drafts.
+    uniqueIndex('subscriptions_renewed_from_idx').on(t.renewedFromId),
     check('subscriptions_dates_check', sql`${t.expiryDate} >= ${t.startDate}`),
   ],
 ).enableRLS()

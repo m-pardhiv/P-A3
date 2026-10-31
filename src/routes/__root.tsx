@@ -7,7 +7,10 @@ import {
   Scripts,
 } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
+import { AppLayout } from '~/components/app-layout'
 import { EmptyState } from '~/components/empty-state'
+import { NotFoundPage } from '~/components/not-found-page'
+import { PortalLayout } from '~/components/portal-layout'
 import { ToastProvider } from '~/components/toast'
 import { getCurrentUser } from '~/server/functions/auth'
 import appCss from '~/styles.css?url'
@@ -31,6 +34,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: RouteError,
 })
 
+/**
+ * A notFound thrown in a server function reaches the client without its route, so it always
+ * lands here. Wrapping it in the signed-in user's layout keeps the sidebar on a missing record.
+ */
+function NotFound() {
+  const { user } = Route.useRouteContext()
+  const page = <NotFoundPage />
+  if (!user) return page
+  return user.role === 'customer' ? (
+    <PortalLayout user={user}>{page}</PortalLayout>
+  ) : (
+    <AppLayout user={user}>{page}</AppLayout>
+  )
+}
+
 function RootDocument({ children }: { children: ReactNode }) {
   return (
     <html lang="en-IN">
@@ -42,22 +60,6 @@ function RootDocument({ children }: { children: ReactNode }) {
         <Scripts />
       </body>
     </html>
-  )
-}
-
-function NotFound() {
-  return (
-    <div className="mx-auto max-w-xl px-4 py-16">
-      <EmptyState
-        title="Page not found"
-        message="This page does not exist, or you do not have access to it."
-        action={
-          <Link to="/" className="btn btn-primary mt-2">
-            Go to home
-          </Link>
-        }
-      />
-    </div>
   )
 }
 

@@ -118,6 +118,25 @@
     border-color: var(--color-danger);
   }
 
+  .input:disabled {
+    background: var(--color-neutral-soft);
+    color: var(--color-muted);
+  }
+
+  .panel {
+    padding: 1.25rem;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-panel);
+    background: var(--color-surface);
+  }
+
+  .link {
+    color: var(--color-ink);
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
   /* The signature element: the active item is a ledger index tab cut into the page. */
   .nav-tab {
     position: relative;

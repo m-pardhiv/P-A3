@@ -11,6 +11,7 @@ export function createClient(max: number) {
     // Supabase's transaction pooler cannot use prepared statements.
     prepare: false,
     ssl: isLocal ? false : 'require',
+    onnotice: () => {},
   })
 }
 

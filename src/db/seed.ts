@@ -1,5 +1,10 @@
 import bcrypt from 'bcryptjs'
+import { addMonths, format, parseISO } from 'date-fns'
+import { eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
+import { clock } from '~/server/clock'
+import { addDays } from '~/server/domain/dates'
+import { type Catalogue, planLine, productLine } from '~/server/domain/subscription'
 import { createClient } from './client'
 import {
   customers,
@@ -7,12 +12,18 @@ import {
   plans,
   products,
   productVariants,
+  quotationTemplateLines,
+  quotationTemplates,
+  subscriptionLines,
+  subscriptions,
   taxRules,
   users,
 } from './schema'
 
 const DEMO_PASSWORD = 'Brightloop@2026'
 const paise = (rupees: number) => Math.round(rupees * 100)
+const today = clock.today()
+const monthsFromToday = (months: number) => format(addMonths(parseISO(today), months), 'yyyy-MM-dd')
 
 const client = createClient(1)
 const db = drizzle(client)
@@ -31,15 +42,21 @@ if (existing.length > 0 && !reset) {
 
 if (reset) {
   await client`TRUNCATE users, customers, products, plans, tax_rules, payment_terms RESTART IDENTITY CASCADE`
+  // These sequences are not owned by a column, so TRUNCATE leaves them running.
+  await client`ALTER SEQUENCE subscription_number_seq RESTART`
+  await client`ALTER SEQUENCE invoice_number_seq RESTART`
 }
 
 const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 12)
 
 await db.transaction(async (tx) => {
-  await tx.insert(users).values([
-    { email: 'admin@brightloop.example', name: 'Meera Iyer', passwordHash, role: 'admin' },
-    { email: 'staff@brightloop.example', name: 'Rohan Kulkarni', passwordHash, role: 'staff' },
-  ])
+  const [admin, staff] = await tx
+    .insert(users)
+    .values([
+      { email: 'admin@brightloop.example', name: 'Meera Iyer', passwordHash, role: 'admin' },
+      { email: 'staff@brightloop.example', name: 'Rohan Kulkarni', passwordHash, role: 'staff' },
+    ])
+    .returning({ id: users.id })
 
   const demoCustomers = [
     { name: 'Asha Rao', company: 'Rao Textiles', phone: '+91 98450 10001', city: 'Bengaluru' },
@@ -48,21 +65,27 @@ await db.transaction(async (tx) => {
     { name: 'Arjun Menon', company: 'Menon Traders', phone: '+91 94470 10004', city: 'Kochi' },
     { name: 'Priya Nair', company: 'Nair Clinics', phone: '+91 98940 10005', city: 'Chennai' },
   ]
+  const customerIds: string[] = []
   for (const customer of demoCustomers) {
     const email = `${customer.name.split(' ')[0].toLowerCase()}@customer.example`
     const [user] = await tx
       .insert(users)
       .values({ email, name: customer.name, passwordHash, role: 'customer' })
       .returning({ id: users.id })
-    await tx.insert(customers).values({
-      userId: user.id,
-      name: customer.name,
-      company: customer.company,
-      email,
-      phone: customer.phone,
-      address: customer.city,
-    })
+    const [created] = await tx
+      .insert(customers)
+      .values({
+        userId: user.id,
+        name: customer.name,
+        company: customer.company,
+        email,
+        phone: customer.phone,
+        address: customer.city,
+      })
+      .returning({ id: customers.id })
+    customerIds.push(created.id)
   }
+  const [asha, vikram, neha, arjun, priya] = customerIds
 
   const [crm, support, cloud, training] = await tx
     .insert(products)
@@ -88,76 +111,330 @@ await db.transaction(async (tx) => {
         notes: 'Taxed at the 5% training rate.',
       },
     ])
-    .returning({ id: products.id })
+    .returning()
 
-  await tx.insert(productVariants).values([
-    { productId: crm.id, attribute: 'Brand', value: 'Odoo', extraPrice: paise(560) },
-    { productId: crm.id, attribute: 'Brand', value: 'Zoho', extraPrice: paise(420) },
-    { productId: support.id, attribute: 'Hours', value: '24x7', extraPrice: paise(1500) },
-    { productId: cloud.id, attribute: 'Capacity', value: '100 GB', extraPrice: 0 },
-    { productId: cloud.id, attribute: 'Capacity', value: '1 TB', extraPrice: paise(1400) },
-    { productId: training.id, attribute: 'Format', value: 'On site', extraPrice: paise(3000) },
+  const [odoo, , support24x7, , cloud1tb] = await tx
+    .insert(productVariants)
+    .values([
+      { productId: crm.id, attribute: 'Brand', value: 'Odoo', extraPrice: paise(560) },
+      { productId: crm.id, attribute: 'Brand', value: 'Zoho', extraPrice: paise(420) },
+      { productId: support.id, attribute: 'Hours', value: '24x7', extraPrice: paise(1500) },
+      { productId: cloud.id, attribute: 'Capacity', value: '100 GB', extraPrice: 0 },
+      { productId: cloud.id, attribute: 'Capacity', value: '1 TB', extraPrice: paise(1400) },
+      { productId: training.id, attribute: 'Format', value: 'On site', extraPrice: paise(3000) },
+    ])
+    .returning()
+
+  const rules = await tx
+    .insert(taxRules)
+    .values([
+      { name: 'GST 18%', ratePercent: 18, isDefault: true },
+      { name: 'GST 5% training', ratePercent: 5, productType: 'training' },
+    ])
+    .returning()
+
+  const [immediate, net15, net30] = await tx
+    .insert(paymentTerms)
+    .values([
+      { name: 'Immediate', daysDue: 0 },
+      { name: 'Net 15', daysDue: 15 },
+      { name: 'Net 30', daysDue: 30 },
+    ])
+    .returning({ id: paymentTerms.id })
+
+  const [daily, weekly, monthly, team, yearly] = await tx
+    .insert(plans)
+    .values([
+      {
+        name: 'Daily pass',
+        price: paise(99),
+        billingPeriod: 'daily',
+        autoClose: true,
+        closable: true,
+        pausable: false,
+        renewable: false,
+      },
+      {
+        name: 'Weekly starter',
+        price: paise(499),
+        billingPeriod: 'weekly',
+        autoClose: true,
+        closable: true,
+        pausable: true,
+        renewable: true,
+      },
+      {
+        name: 'Monthly standard',
+        price: paise(1999),
+        billingPeriod: 'monthly',
+        autoClose: false,
+        closable: true,
+        pausable: true,
+        renewable: true,
+      },
+      {
+        name: 'Monthly team',
+        price: paise(4999),
+        billingPeriod: 'monthly',
+        minQuantity: 5,
+        autoClose: false,
+        closable: false,
+        pausable: true,
+        renewable: true,
+      },
+      {
+        name: 'Yearly business',
+        price: paise(19999),
+        billingPeriod: 'yearly',
+        autoClose: false,
+        closable: false,
+        pausable: false,
+        renewable: true,
+      },
+      {
+        name: 'Launch offer',
+        price: paise(999),
+        billingPeriod: 'monthly',
+        availableTo: monthsFromToday(-1),
+        autoClose: false,
+        closable: true,
+        pausable: false,
+        renewable: false,
+      },
+    ])
+    .returning()
+
+  const [starter, teamRollout] = await tx
+    .insert(quotationTemplates)
+    .values([
+      { name: 'Starter quote', planId: monthly.id, paymentTermId: net15.id, validityDays: 30 },
+      { name: 'Team rollout', planId: team.id, paymentTermId: net30.id, validityDays: 14 },
+    ])
+    .returning({ id: quotationTemplates.id })
+
+  await tx.insert(quotationTemplateLines).values([
+    { templateId: starter.id, productId: crm.id, variantId: odoo.id, quantity: 2 },
+    { templateId: teamRollout.id, productId: crm.id, variantId: odoo.id, quantity: 5 },
+    { templateId: teamRollout.id, productId: support.id, quantity: 1 },
+    { templateId: teamRollout.id, productId: training.id, quantity: 1 },
   ])
 
-  await tx.insert(taxRules).values([
-    { name: 'GST 18%', ratePercent: 18, isDefault: true },
-    { name: 'GST 5% training', ratePercent: 5, productType: 'training' },
-  ])
+  const catalogue: Catalogue = {
+    products: new Map([crm, support, cloud, training].map((p) => [p.id, p])),
+    variants: new Map([odoo, support24x7, cloud1tb].map((v) => [v.id, v])),
+    taxRules: rules,
+  }
 
-  await tx.insert(paymentTerms).values([
-    { name: 'Immediate', daysDue: 0 },
-    { name: 'Net 15', daysDue: 15 },
-    { name: 'Net 30', daysDue: 30 },
-  ])
+  type DemoSubscription = {
+    customerId: string
+    plan: typeof monthly
+    paymentTermId: string
+    status: 'draft' | 'quotation' | 'confirmed' | 'active' | 'paused' | 'closed'
+    startDate: string
+    expiryDate?: string
+    planQuantity?: number
+    lines?: { productId: string; variantId?: string; quantity: number }[]
+    templateId?: string
+    quotationValidUntil?: string
+    createdBy?: string
+  }
 
-  await tx.insert(plans).values([
+  const crmOdoo = (quantity: number) => ({ productId: crm.id, variantId: odoo.id, quantity })
+  const supportLine = { productId: support.id, variantId: support24x7.id, quantity: 1 }
+  const storageLine = { productId: cloud.id, variantId: cloud1tb.id, quantity: 2 }
+  const trainingLine = { productId: training.id, quantity: 1 }
+
+  const closedExpiry = monthsFromToday(-2)
+
+  const demos: DemoSubscription[] = [
     {
-      name: 'Daily pass',
-      price: paise(99),
-      billingPeriod: 'daily',
-      autoClose: true,
-      closable: true,
-      pausable: false,
-      renewable: false,
+      customerId: arjun,
+      plan: monthly,
+      paymentTermId: net15.id,
+      status: 'closed',
+      startDate: monthsFromToday(-7),
+      expiryDate: closedExpiry,
+      lines: [crmOdoo(1)],
     },
     {
-      name: 'Weekly starter',
-      price: paise(499),
-      billingPeriod: 'weekly',
-      autoClose: true,
-      closable: true,
-      pausable: true,
-      renewable: true,
+      customerId: asha,
+      plan: monthly,
+      paymentTermId: net15.id,
+      status: 'active',
+      startDate: monthsFromToday(-4),
+      expiryDate: monthsFromToday(8),
+      lines: [crmOdoo(3), storageLine],
     },
     {
-      name: 'Monthly standard',
-      price: paise(1999),
-      billingPeriod: 'monthly',
-      autoClose: false,
-      closable: true,
-      pausable: true,
-      renewable: true,
+      customerId: vikram,
+      plan: team,
+      paymentTermId: net30.id,
+      status: 'active',
+      startDate: monthsFromToday(-3),
+      planQuantity: 8,
+      lines: [crmOdoo(8), supportLine],
+      createdBy: staff.id,
     },
     {
-      name: 'Monthly team',
-      price: paise(4999),
-      billingPeriod: 'monthly',
-      minQuantity: 5,
-      autoClose: false,
-      closable: false,
-      pausable: true,
-      renewable: true,
+      customerId: neha,
+      plan: yearly,
+      paymentTermId: net30.id,
+      status: 'active',
+      startDate: monthsFromToday(-2),
+      expiryDate: monthsFromToday(10),
+      lines: [trainingLine],
     },
     {
-      name: 'Yearly business',
-      price: paise(19999),
-      billingPeriod: 'yearly',
-      autoClose: false,
-      closable: false,
-      pausable: false,
-      renewable: true,
+      customerId: arjun,
+      plan: weekly,
+      paymentTermId: immediate.id,
+      status: 'active',
+      startDate: addDays(today, -42),
+      expiryDate: addDays(today, 42),
+      createdBy: staff.id,
     },
-  ])
+    {
+      customerId: priya,
+      plan: daily,
+      paymentTermId: immediate.id,
+      status: 'active',
+      startDate: addDays(today, -10),
+      expiryDate: addDays(today, 20),
+    },
+    {
+      customerId: neha,
+      plan: monthly,
+      paymentTermId: net15.id,
+      status: 'paused',
+      startDate: monthsFromToday(-3),
+      expiryDate: monthsFromToday(9),
+      lines: [storageLine],
+    },
+    {
+      customerId: priya,
+      plan: team,
+      paymentTermId: net30.id,
+      status: 'paused',
+      startDate: monthsFromToday(-2),
+      planQuantity: 5,
+      createdBy: staff.id,
+    },
+    {
+      customerId: vikram,
+      plan: monthly,
+      paymentTermId: net15.id,
+      status: 'confirmed',
+      startDate: addDays(today, -2),
+      expiryDate: monthsFromToday(12),
+      lines: [crmOdoo(2)],
+      createdBy: staff.id,
+    },
+    {
+      customerId: asha,
+      plan: weekly,
+      paymentTermId: immediate.id,
+      status: 'confirmed',
+      startDate: addDays(today, 14),
+      expiryDate: addDays(today, 98),
+    },
+    {
+      customerId: neha,
+      plan: monthly,
+      paymentTermId: net15.id,
+      status: 'quotation',
+      startDate: addDays(today, 7),
+      expiryDate: monthsFromToday(12),
+      lines: [crmOdoo(2)],
+      templateId: starter.id,
+      quotationValidUntil: addDays(today, 20),
+      createdBy: staff.id,
+    },
+    {
+      customerId: arjun,
+      plan: team,
+      paymentTermId: net30.id,
+      status: 'quotation',
+      startDate: addDays(today, 3),
+      expiryDate: monthsFromToday(12),
+      lines: [crmOdoo(5), { productId: support.id, quantity: 1 }, trainingLine],
+      templateId: teamRollout.id,
+      quotationValidUntil: addDays(today, -3),
+    },
+    {
+      customerId: priya,
+      plan: yearly,
+      paymentTermId: net30.id,
+      status: 'quotation',
+      startDate: addDays(today, 10),
+      expiryDate: monthsFromToday(12),
+      lines: [supportLine],
+    },
+    {
+      customerId: asha,
+      plan: monthly,
+      paymentTermId: net15.id,
+      status: 'draft',
+      startDate: addDays(today, 7),
+      lines: [crmOdoo(1)],
+      templateId: starter.id,
+      quotationValidUntil: addDays(today, 30),
+      createdBy: staff.id,
+    },
+    {
+      customerId: vikram,
+      plan: weekly,
+      paymentTermId: immediate.id,
+      status: 'draft',
+      startDate: addDays(today, 5),
+      lines: [storageLine],
+    },
+    {
+      customerId: arjun,
+      plan: monthly,
+      paymentTermId: net15.id,
+      status: 'draft',
+      startDate: addDays(closedExpiry, 1),
+      expiryDate: monthsFromToday(3),
+      lines: [crmOdoo(1)],
+    },
+  ]
+
+  const created: { id: string }[] = []
+  for (const demo of demos) {
+    const running = demo.status === 'active' || demo.status === 'paused'
+    const [subscription] = await tx
+      .insert(subscriptions)
+      .values({
+        customerId: demo.customerId,
+        planId: demo.plan.id,
+        templateId: demo.templateId,
+        status: demo.status,
+        startDate: demo.startDate,
+        expiryDate: demo.expiryDate,
+        nextInvoiceDate: running ? demo.startDate : null,
+        paymentTermId: demo.paymentTermId,
+        quotationValidUntil: demo.quotationValidUntil,
+        createdBy: demo.createdBy ?? admin.id,
+      })
+      .returning({ id: subscriptions.id })
+    created.push(subscription)
+
+    const priced = [
+      planLine(demo.plan, demo.planQuantity ?? demo.plan.minQuantity, rules),
+      ...(demo.lines ?? []).map((line) =>
+        productLine({ ...line, variantId: line.variantId ?? null }, catalogue),
+      ),
+    ]
+    await tx
+      .insert(subscriptionLines)
+      .values(priced.map((line) => ({ ...line, subscriptionId: subscription.id })))
+  }
+
+  // The last draft is the renewal of the first, closed subscription.
+  await tx
+    .update(subscriptions)
+    .set({ renewedFromId: created[0].id })
+    .where(eq(subscriptions.id, created[created.length - 1].id))
 })
 
 console.log(`
