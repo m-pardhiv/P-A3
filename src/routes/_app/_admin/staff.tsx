@@ -44,7 +44,7 @@ function StaffPage() {
   return (
     <>
       <PageHeader title="Staff" description="People who can work in this console." />
-      <div className="grid items-start gap-6 lg:grid-cols-[1fr_20rem]">
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <DataTable
           data={data}
           rowKey={(row) => row.id}

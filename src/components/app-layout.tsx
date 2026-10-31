@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { Link, type LinkProps, useLocation, useRouter } from '@tanstack/react-router'
+import { Link, type LinkProps, useRouter } from '@tanstack/react-router'
 import {
   BadgePercent,
   CalendarClock,
@@ -19,7 +19,7 @@ import {
   Users,
   X,
 } from 'lucide-react'
-import { type ReactNode, useEffect, useState } from 'react'
+import { type ReactNode, useState } from 'react'
 import { logout } from '~/server/functions/auth'
 import type { SessionUser } from '~/server/session'
 
@@ -82,11 +82,7 @@ export function BrandMark() {
 
 export function AppLayout({ user, children }: { user: SessionUser; children: ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const pathname = useLocation({ select: (location) => location.pathname })
   const signOut = useSignOut()
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: closes the drawer on every navigation.
-  useEffect(() => setDrawerOpen(false), [pathname])
 
   const groups = navGroups.filter((group) => !group.adminOnly || user.role === 'admin')
 
@@ -133,14 +129,14 @@ export function AppLayout({ user, children }: { user: SessionUser; children: Rea
 
         <nav aria-label="Main" className="flex-1 overflow-y-auto pb-4 pl-3">
           {groups.map((group) => (
-            <div key={group.label} className="mb-5">
+            <div key={group.label} className="mb-3">
               <h2 className="mb-1 px-3 font-sans text-sm tracking-normal text-ink-text/70">
                 {group.label}
               </h2>
               <ul className="flex flex-col gap-0.5">
                 {group.items.map((item) => (
                   <li key={item.label}>
-                    <Link to={item.to} className="nav-tab">
+                    <Link to={item.to} className="nav-tab" onClick={() => setDrawerOpen(false)}>
                       <item.icon size={18} aria-hidden />
                       {item.label}
                     </Link>
@@ -151,10 +147,12 @@ export function AppLayout({ user, children }: { user: SessionUser; children: Rea
           ))}
         </nav>
 
-        <div className="border-t border-ink-line px-5 py-4 text-sm">
-          <p className="truncate font-medium text-white">{user.name}</p>
-          <p className="mb-2 text-ink-text capitalize">{user.role}</p>
-          <button type="button" className="text-ink-text underline" onClick={signOut}>
+        <div className="flex items-center justify-between gap-3 border-t border-ink-line px-5 py-3 text-sm">
+          <div className="min-w-0">
+            <p className="truncate font-medium text-white">{user.name}</p>
+            <p className="text-ink-text capitalize">{user.role}</p>
+          </div>
+          <button type="button" className="shrink-0 text-ink-text underline" onClick={signOut}>
             Sign out
           </button>
         </div>
