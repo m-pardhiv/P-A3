@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "files": {
-    "includes": ["**", "!**/routeTree.gen.ts", "!drizzle", "!dist", "!.output", "!.tanstack"]
+    "includes": ["**", "!**/routeTree.gen.ts", "!drizzle", "!dist", "!.output", "!.tanstack", "!brightloop-froentend"]
   },
   "formatter": {
     "indentStyle": "space",
