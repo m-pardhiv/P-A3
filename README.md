@@ -33,7 +33,7 @@ Plus Jakarta Sans, a collapsible sidebar, and cards with soft shadows. Everythin
 `src/components/design` and `src/components/shell`. Customers get the look of the public home page:
 a white page, a top navigation bar, and a home with a typed headline and moving cards that hold
 their own figures. Behind it are subscription cards with a timeline, paper-style invoices, payment
-history, plans and their account. Staff and admins get the console with the sidebar, with the
+history, plans and their account. Staff  and admins get the console with the sidebar, with the
 dashboard as its home.
 
 ## Demo accounts
