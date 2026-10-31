@@ -1,0 +1,7 @@
+# Optional local mail catcher. The database is Supabase, so nothing else runs here.
+services:
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "1025:1025"
+      - "8025:8025"

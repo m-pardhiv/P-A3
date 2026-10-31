@@ -1,0 +1,221 @@
+@import "tailwindcss";
+@import "@fontsource-variable/bricolage-grotesque";
+@import "@fontsource/ibm-plex-sans/400.css";
+@import "@fontsource/ibm-plex-sans/500.css";
+@import "@fontsource/ibm-plex-sans/600.css";
+
+/* The only place colours, fonts and radii are defined. */
+@theme {
+  --color-ink: #1b2559;
+  --color-ink-raised: #2a3672;
+  --color-ink-line: #3b4888;
+  --color-ink-text: #c9d0ec;
+  --color-paper: #f2f4fa;
+  --color-surface: #ffffff;
+  --color-marigold: #f2a900;
+  --color-text: #171c33;
+  --color-muted: #566080;
+  --color-line: #d9deec;
+
+  --color-success: #12694f;
+  --color-success-soft: #dcf2ea;
+  --color-warning: #875800;
+  --color-warning-soft: #fdf0d0;
+  --color-danger: #a8231b;
+  --color-danger-soft: #fbe4e2;
+  --color-info: #2450c0;
+  --color-info-soft: #e1e9fb;
+  --color-neutral: #4a5372;
+  --color-neutral-soft: #e8ebf3;
+
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Bricolage Grotesque Variable", "IBM Plex Sans", sans-serif;
+
+  --radius-control: 0.5rem;
+  --radius-panel: 0.75rem;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--color-paper);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-marigold);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.5rem;
+    padding: 0 1rem;
+    border-radius: var(--radius-control);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 120ms;
+  }
+
+  .btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .btn-primary {
+    background: var(--color-ink);
+    color: white;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: var(--color-ink-raised);
+  }
+
+  .btn-secondary {
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    color: var(--color-text);
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    background: var(--color-neutral-soft);
+  }
+
+  .btn-danger {
+    background: var(--color-danger);
+    color: white;
+  }
+
+  .input {
+    width: 100%;
+    min-height: 2.5rem;
+    padding: 0 0.75rem;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-control);
+    background: var(--color-surface);
+  }
+
+  .input[aria-invalid="true"] {
+    border-color: var(--color-danger);
+  }
+
+  /* The signature element: the active item is a ledger index tab cut into the page. */
+  .nav-tab {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-height: 2.5rem;
+    padding: 0 0.75rem;
+    border-radius: var(--radius-control) 0 0 var(--radius-control);
+    color: var(--color-ink-text);
+    font-size: 0.9375rem;
+  }
+
+  .nav-tab:hover {
+    background: var(--color-ink-raised);
+    color: white;
+  }
+
+  .nav-tab[data-status="active"] {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-weight: 600;
+  }
+
+  .nav-tab[data-status="active"]::before,
+  .nav-tab[data-status="active"]::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    width: 0.75rem;
+    height: 0.75rem;
+    pointer-events: none;
+  }
+
+  .nav-tab[data-status="active"]::before {
+    top: -0.75rem;
+    background: radial-gradient(
+      circle at top left,
+      var(--color-ink) 0.75rem,
+      var(--color-paper) 0.78rem
+    );
+  }
+
+  .nav-tab[data-status="active"]::after {
+    bottom: -0.75rem;
+    background: radial-gradient(
+      circle at bottom left,
+      var(--color-ink) 0.75rem,
+      var(--color-paper) 0.78rem
+    );
+  }
+
+  .portal-tab {
+    display: flex;
+    align-items: center;
+    min-height: 2.5rem;
+    padding: 0 0.875rem;
+    border-radius: var(--radius-control) var(--radius-control) 0 0;
+    color: var(--color-ink-text);
+    font-size: 0.9375rem;
+    white-space: nowrap;
+  }
+
+  .portal-tab:hover {
+    color: white;
+  }
+
+  .portal-tab[data-status="active"] {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-weight: 600;
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* The one page-load moment: the billing cycle closes on the sign-in panel. */
+  .loop-arc {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 8;
+    animation: close-loop 1100ms ease-out both;
+  }
+
+  @keyframes close-loop {
+    from {
+      stroke-dashoffset: 100;
+    }
+    to {
+      stroke-dashoffset: 8;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Unlayered, so this already beats everything inside @layer. */
+  * {
+    transition: none;
+    animation: none;
+  }
+}
