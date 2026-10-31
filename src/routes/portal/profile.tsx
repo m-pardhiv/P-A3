@@ -34,10 +34,11 @@ function ProfilePage() {
   return (
     <div className="max-w-2xl">
       <PageHeader title="Profile" description="The details Brightloop uses on your invoices." />
-      <form onSubmit={form.onSubmit} noValidate className="panel flex flex-col gap-4">
+      <form onSubmit={form.onSubmit} method="post" noValidate className="panel flex flex-col gap-4">
         <FormError message={form.formError} />
         <FormField
           label="Name"
+          required
           name="name"
           defaultValue={profile.name}
           error={form.fieldErrors.name}

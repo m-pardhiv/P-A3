@@ -107,24 +107,27 @@ function ProductPage() {
           )}
 
           {canEdit ? (
-            <form onSubmit={form.onSubmit} noValidate className="flex flex-col gap-4">
+            <form onSubmit={form.onSubmit} method="post" noValidate className="flex flex-col gap-4">
               <FormError message={form.formError} />
               <input type="hidden" name="productId" value={data.product.id} />
               <div className="grid gap-4 sm:grid-cols-3">
                 <FormField
                   label="Attribute"
+                  required
                   name="attribute"
                   placeholder="Brand"
                   error={form.fieldErrors.attribute}
                 />
                 <FormField
                   label="Value"
+                  required
                   name="value"
                   placeholder="Odoo"
                   error={form.fieldErrors.value}
                 />
                 <FormField
                   label="Extra price (₹)"
+                  required
                   name="extraPrice"
                   inputMode="decimal"
                   placeholder="560.00"

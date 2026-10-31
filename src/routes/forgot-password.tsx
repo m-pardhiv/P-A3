@@ -25,10 +25,11 @@ function ForgotPasswordPage() {
           If that email has an account, a reset link is on its way. The link expires in 1 hour.
         </p>
       ) : (
-        <form onSubmit={form.onSubmit} noValidate className="flex flex-col gap-4">
+        <form onSubmit={form.onSubmit} method="post" noValidate className="flex flex-col gap-4">
           <FormError message={form.formError} />
           <FormField
             label="Email"
+            required
             name="email"
             type="email"
             autoComplete="email"

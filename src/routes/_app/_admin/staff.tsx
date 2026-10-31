@@ -58,12 +58,19 @@ function StaffPage() {
         />
         <section className="rounded-panel border border-line bg-surface p-5">
           <h2 className="mb-4 text-xl font-semibold">Create staff account</h2>
-          <form onSubmit={form.onSubmit} noValidate className="flex flex-col gap-4">
+          <form onSubmit={form.onSubmit} method="post" noValidate className="flex flex-col gap-4">
             <FormError message={form.formError} />
-            <FormField label="Name" name="name" error={form.fieldErrors.name} />
-            <FormField label="Email" name="email" type="email" error={form.fieldErrors.email} />
+            <FormField label="Name" required name="name" error={form.fieldErrors.name} />
+            <FormField
+              label="Email"
+              required
+              name="email"
+              type="email"
+              error={form.fieldErrors.email}
+            />
             <FormField
               label="Temporary password"
+              required
               name="password"
               type="password"
               autoComplete="new-password"

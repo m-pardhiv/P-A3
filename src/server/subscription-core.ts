@@ -11,6 +11,7 @@ import {
   type SubscriptionStatus,
   transition,
 } from './domain/subscription-state'
+import { recordSubscriptionEvents } from './subscription-events'
 
 /** Stops two people changing the same subscription at once. Call inside a transaction. */
 export const lockSubscription = (tx: Executor, id: string) =>
@@ -95,6 +96,22 @@ export async function performSubscriptionAction(
           createdBy: input.actorId,
         })
         .returning({ id: subscriptions.id })
+      await recordSubscriptionEvents(tx, [
+        {
+          subscriptionId: input.id,
+          action: 'renew',
+          fromStatus: found.subscription.status,
+          toStatus: found.subscription.status,
+          actorId: input.actorId,
+        },
+        {
+          subscriptionId: renewal.id,
+          action: 'created',
+          fromStatus: null,
+          toStatus: 'draft',
+          actorId: input.actorId,
+        },
+      ])
       const lines = await tx
         .select()
         .from(subscriptionLines)
@@ -113,6 +130,15 @@ export async function performSubscriptionAction(
         ...(input.action === 'close' ? { nextInvoiceDate: null } : {}),
       })
       .where(eq(subscriptions.id, input.id))
+    await recordSubscriptionEvents(tx, [
+      {
+        subscriptionId: input.id,
+        action: input.action,
+        fromStatus: found.subscription.status,
+        toStatus: result.status,
+        actorId: input.actorId,
+      },
+    ])
     return { ok: true, data: { id: input.id } }
   })
 }

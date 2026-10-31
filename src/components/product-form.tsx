@@ -36,18 +36,20 @@ export function ProductForm({ product }: { product?: Product }) {
   })
 
   return (
-    <form onSubmit={form.onSubmit} noValidate className="panel">
+    <form onSubmit={form.onSubmit} method="post" noValidate className="panel">
       <fieldset disabled={!canEdit} className="flex min-w-0 flex-col gap-4">
         <FormError message={form.formError} />
         <input type="hidden" name="id" value={product?.id ?? ''} />
         <FormField
           label="Name"
+          required
           name="name"
           defaultValue={product?.name}
           error={form.fieldErrors.name}
         />
         <SelectField
           label="Type"
+          required
           name="type"
           defaultValue={product?.type ?? ''}
           placeholder="Choose a type"
@@ -58,6 +60,7 @@ export function ProductForm({ product }: { product?: Product }) {
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField
             label="Sales price (₹)"
+            required
             name="salesPrice"
             inputMode="decimal"
             defaultValue={product ? paiseToInput(product.salesPrice) : ''}
@@ -65,6 +68,7 @@ export function ProductForm({ product }: { product?: Product }) {
           />
           <FormField
             label="Cost price (₹)"
+            required
             name="costPrice"
             inputMode="decimal"
             defaultValue={product ? paiseToInput(product.costPrice) : ''}

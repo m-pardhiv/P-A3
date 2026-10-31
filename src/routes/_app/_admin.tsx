@@ -4,7 +4,10 @@ import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 export const Route = createFileRoute('/_app/_admin')({
   beforeLoad: ({ context }) => {
     if (context.user.role !== 'admin')
-      throw redirect({ to: '/dashboard', search: { payPage: 1, overduePage: 1, subPage: 1 } })
+      throw redirect({
+        to: '/dashboard',
+        search: { payPage: 1, overduePage: 1, subPage: 1, invoicePage: 1 },
+      })
   },
   component: () => <Outlet />,
 })

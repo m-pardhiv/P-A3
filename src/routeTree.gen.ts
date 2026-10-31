@@ -20,7 +20,9 @@ import { Route as AppAdminRouteImport } from './routes/_app/_admin'
 import { Route as AppBillingRouteImport } from './routes/_app/billing'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppPaymentsRouteImport } from './routes/_app/payments'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as PortalIndexRouteImport } from './routes/portal/index'
+import { Route as PortalPlansRouteImport } from './routes/portal/plans'
 import { Route as PortalProfileRouteImport } from './routes/portal/profile'
 import { Route as AppAdminDiscountsRouteImport } from './routes/_app/_admin/discounts'
 import { Route as AppAdminPaymentTermsRouteImport } from './routes/_app/_admin/payment-terms'
@@ -48,6 +50,7 @@ import { Route as PortalInvoicesIdRouteImport } from './routes/portal/invoices/$
 import { Route as PortalSubscriptionsIndexRouteImport } from './routes/portal/subscriptions/index'
 import { Route as PortalSubscriptionsIdRouteImport } from './routes/portal/subscriptions/$id'
 import { Route as PrintInvoiceIdRouteImport } from './routes/print/invoice/$id'
+import { Route as PrintQuotationIdRouteImport } from './routes/print/quotation/$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -102,9 +105,19 @@ const AppPaymentsRoute = AppPaymentsRouteImport.update({
   path: '/payments',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PortalIndexRoute = PortalIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => PortalRoute,
+} as any)
+const PortalPlansRoute = PortalPlansRouteImport.update({
+  id: '/plans',
+  path: '/plans',
   getParentRoute: () => PortalRoute,
 } as any)
 const PortalProfileRoute = PortalProfileRouteImport.update({
@@ -245,6 +258,11 @@ const PrintInvoiceIdRoute = PrintInvoiceIdRouteImport.update({
   path: '/print/invoice/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrintQuotationIdRoute = PrintQuotationIdRouteImport.update({
+  id: '/print/quotation/$id',
+  path: '/print/quotation/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -256,6 +274,8 @@ export interface FileRoutesByFullPath {
   '/billing': typeof AppBillingRoute
   '/dashboard': typeof AppDashboardRoute
   '/payments': typeof AppPaymentsRoute
+  '/api/health': typeof ApiHealthRoute
+  '/portal/plans': typeof PortalPlansRoute
   '/portal/profile': typeof PortalProfileRoute
   '/portal/': typeof PortalIndexRoute
   '/discounts': typeof AppAdminDiscountsRoute
@@ -276,6 +296,7 @@ export interface FileRoutesByFullPath {
   '/portal/invoices/$id': typeof PortalInvoicesIdRoute
   '/portal/subscriptions/$id': typeof PortalSubscriptionsIdRoute
   '/print/invoice/$id': typeof PrintInvoiceIdRoute
+  '/print/quotation/$id': typeof PrintQuotationIdRoute
   '/customers/': typeof AppCustomersIndexRoute
   '/invoices/': typeof AppInvoicesIndexRoute
   '/plans/': typeof AppPlansIndexRoute
@@ -294,6 +315,8 @@ export interface FileRoutesByTo {
   '/billing': typeof AppBillingRoute
   '/dashboard': typeof AppDashboardRoute
   '/payments': typeof AppPaymentsRoute
+  '/api/health': typeof ApiHealthRoute
+  '/portal/plans': typeof PortalPlansRoute
   '/portal/profile': typeof PortalProfileRoute
   '/portal': typeof PortalIndexRoute
   '/discounts': typeof AppAdminDiscountsRoute
@@ -314,6 +337,7 @@ export interface FileRoutesByTo {
   '/portal/invoices/$id': typeof PortalInvoicesIdRoute
   '/portal/subscriptions/$id': typeof PortalSubscriptionsIdRoute
   '/print/invoice/$id': typeof PrintInvoiceIdRoute
+  '/print/quotation/$id': typeof PrintQuotationIdRoute
   '/customers': typeof AppCustomersIndexRoute
   '/invoices': typeof AppInvoicesIndexRoute
   '/plans': typeof AppPlansIndexRoute
@@ -336,6 +360,8 @@ export interface FileRoutesById {
   '/_app/billing': typeof AppBillingRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/payments': typeof AppPaymentsRoute
+  '/api/health': typeof ApiHealthRoute
+  '/portal/plans': typeof PortalPlansRoute
   '/portal/profile': typeof PortalProfileRoute
   '/portal/': typeof PortalIndexRoute
   '/_app/_admin/discounts': typeof AppAdminDiscountsRoute
@@ -356,6 +382,7 @@ export interface FileRoutesById {
   '/portal/invoices/$id': typeof PortalInvoicesIdRoute
   '/portal/subscriptions/$id': typeof PortalSubscriptionsIdRoute
   '/print/invoice/$id': typeof PrintInvoiceIdRoute
+  '/print/quotation/$id': typeof PrintQuotationIdRoute
   '/_app/customers/': typeof AppCustomersIndexRoute
   '/_app/invoices/': typeof AppInvoicesIndexRoute
   '/_app/plans/': typeof AppPlansIndexRoute
@@ -377,6 +404,8 @@ export interface FileRouteTypes {
     | '/billing'
     | '/dashboard'
     | '/payments'
+    | '/api/health'
+    | '/portal/plans'
     | '/portal/profile'
     | '/portal/'
     | '/discounts'
@@ -397,6 +426,7 @@ export interface FileRouteTypes {
     | '/portal/invoices/$id'
     | '/portal/subscriptions/$id'
     | '/print/invoice/$id'
+    | '/print/quotation/$id'
     | '/customers/'
     | '/invoices/'
     | '/plans/'
@@ -415,6 +445,8 @@ export interface FileRouteTypes {
     | '/billing'
     | '/dashboard'
     | '/payments'
+    | '/api/health'
+    | '/portal/plans'
     | '/portal/profile'
     | '/portal'
     | '/discounts'
@@ -435,6 +467,7 @@ export interface FileRouteTypes {
     | '/portal/invoices/$id'
     | '/portal/subscriptions/$id'
     | '/print/invoice/$id'
+    | '/print/quotation/$id'
     | '/customers'
     | '/invoices'
     | '/plans'
@@ -456,6 +489,8 @@ export interface FileRouteTypes {
     | '/_app/billing'
     | '/_app/dashboard'
     | '/_app/payments'
+    | '/api/health'
+    | '/portal/plans'
     | '/portal/profile'
     | '/portal/'
     | '/_app/_admin/discounts'
@@ -476,6 +511,7 @@ export interface FileRouteTypes {
     | '/portal/invoices/$id'
     | '/portal/subscriptions/$id'
     | '/print/invoice/$id'
+    | '/print/quotation/$id'
     | '/_app/customers/'
     | '/_app/invoices/'
     | '/_app/plans/'
@@ -494,7 +530,9 @@ export interface RootRouteChildren {
   PortalRoute: typeof PortalRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
+  ApiHealthRoute: typeof ApiHealthRoute
   PrintInvoiceIdRoute: typeof PrintInvoiceIdRoute
+  PrintQuotationIdRoute: typeof PrintQuotationIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -576,11 +614,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPaymentsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/portal/': {
       id: '/portal/'
       path: '/'
       fullPath: '/portal/'
       preLoaderRoute: typeof PortalIndexRouteImport
+      parentRoute: typeof PortalRoute
+    }
+    '/portal/plans': {
+      id: '/portal/plans'
+      path: '/plans'
+      fullPath: '/portal/plans'
+      preLoaderRoute: typeof PortalPlansRouteImport
       parentRoute: typeof PortalRoute
     }
     '/portal/profile': {
@@ -772,6 +824,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrintInvoiceIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/print/quotation/$id': {
+      id: '/print/quotation/$id'
+      path: '/print/quotation/$id'
+      fullPath: '/print/quotation/$id'
+      preLoaderRoute: typeof PrintQuotationIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -844,6 +903,7 @@ const AppRouteChildren: AppRouteChildren = {
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 interface PortalRouteChildren {
+  PortalPlansRoute: typeof PortalPlansRoute
   PortalProfileRoute: typeof PortalProfileRoute
   PortalIndexRoute: typeof PortalIndexRoute
   PortalInvoicesIdRoute: typeof PortalInvoicesIdRoute
@@ -853,6 +913,7 @@ interface PortalRouteChildren {
 }
 
 const PortalRouteChildren: PortalRouteChildren = {
+  PortalPlansRoute: PortalPlansRoute,
   PortalProfileRoute: PortalProfileRoute,
   PortalIndexRoute: PortalIndexRoute,
   PortalInvoicesIdRoute: PortalInvoicesIdRoute,
@@ -872,7 +933,9 @@ const rootRouteChildren: RootRouteChildren = {
   PortalRoute: PortalRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
+  ApiHealthRoute: ApiHealthRoute,
   PrintInvoiceIdRoute: PrintInvoiceIdRoute,
+  PrintQuotationIdRoute: PrintQuotationIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

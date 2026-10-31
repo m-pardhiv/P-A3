@@ -41,12 +41,13 @@ export function PlanForm({ plan }: { plan?: Plan }) {
   })
 
   return (
-    <form onSubmit={form.onSubmit} noValidate className="panel">
+    <form onSubmit={form.onSubmit} method="post" noValidate className="panel">
       <fieldset disabled={!canEdit} className="flex min-w-0 flex-col gap-4">
         <FormError message={form.formError} />
         <input type="hidden" name="id" value={plan?.id ?? ''} />
         <FormField
           label="Name"
+          required
           name="name"
           defaultValue={plan?.name}
           error={form.fieldErrors.name}
@@ -54,6 +55,7 @@ export function PlanForm({ plan }: { plan?: Plan }) {
         <div className="grid gap-4 sm:grid-cols-3">
           <FormField
             label="Price (₹)"
+            required
             name="price"
             inputMode="decimal"
             defaultValue={plan ? paiseToInput(plan.price) : ''}
@@ -61,6 +63,7 @@ export function PlanForm({ plan }: { plan?: Plan }) {
           />
           <SelectField
             label="Billing period"
+            required
             name="billingPeriod"
             defaultValue={plan?.billingPeriod ?? 'monthly'}
             options={BILLING_PERIODS.map((value) => ({ value, label: capitalize(value) }))}
@@ -68,6 +71,7 @@ export function PlanForm({ plan }: { plan?: Plan }) {
           />
           <FormField
             label="Minimum quantity"
+            required
             name="minQuantity"
             inputMode="numeric"
             defaultValue={plan?.minQuantity ?? 1}

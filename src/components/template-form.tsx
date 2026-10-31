@@ -49,12 +49,13 @@ export function TemplateForm({ template, options }: { template?: Template; optio
   })
 
   return (
-    <form onSubmit={form.onSubmit} noValidate className="flex flex-col gap-6">
+    <form onSubmit={form.onSubmit} method="post" noValidate className="flex flex-col gap-6">
       <section className="panel flex flex-col gap-4">
         <FormError message={form.formError} />
         <input type="hidden" name="id" value={template?.id ?? ''} />
         <FormField
           label="Template name"
+          required
           name="name"
           defaultValue={template?.name}
           error={form.fieldErrors.name}
@@ -62,6 +63,7 @@ export function TemplateForm({ template, options }: { template?: Template; optio
         <div className="grid gap-4 sm:grid-cols-3">
           <SelectField
             label="Plan"
+            required
             name="planId"
             defaultValue={template?.planId ?? ''}
             placeholder="Choose a plan"
@@ -70,6 +72,7 @@ export function TemplateForm({ template, options }: { template?: Template; optio
           />
           <SelectField
             label="Payment terms"
+            required
             name="paymentTermId"
             defaultValue={template?.paymentTermId ?? ''}
             placeholder="Choose payment terms"
@@ -78,6 +81,7 @@ export function TemplateForm({ template, options }: { template?: Template; optio
           />
           <FormField
             label="Quotation valid for (days)"
+            required
             name="validityDays"
             inputMode="numeric"
             defaultValue={template?.validityDays ?? 30}

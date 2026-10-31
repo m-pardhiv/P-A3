@@ -23,16 +23,18 @@ function SignupPage() {
 
   return (
     <AuthLayout title="Create your account">
-      <form onSubmit={form.onSubmit} noValidate className="flex flex-col gap-4">
+      <form onSubmit={form.onSubmit} method="post" noValidate className="flex flex-col gap-4">
         <FormError message={form.formError} />
         <FormField
           label="Full name"
+          required
           name="name"
           autoComplete="name"
           error={form.fieldErrors.name}
         />
         <FormField
           label="Email"
+          required
           name="email"
           type="email"
           autoComplete="email"
@@ -40,6 +42,7 @@ function SignupPage() {
         />
         <FormField
           label="Password"
+          required
           name="password"
           type="password"
           autoComplete="new-password"

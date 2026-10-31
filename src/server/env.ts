@@ -12,6 +12,8 @@ const schema = z.object({
   SMTP_PASS: z.string().optional(),
   MAIL_FROM: z.string().default('Brightloop <billing@brightloop.example>'),
   // The daily billing job. Switch it off to run billing only from the Billing page.
+  // Set to true only behind a reverse proxy you control, so client addresses come from X-Forwarded-For.
+  TRUST_PROXY: z.enum(['true', 'false']).default('false'),
   BILLING_SCHEDULER: z.enum(['on', 'off']).default('on'),
   BILLING_HOUR: z.coerce.number().int().min(0).max(23).default(2),
 })

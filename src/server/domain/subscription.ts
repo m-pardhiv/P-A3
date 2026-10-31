@@ -86,6 +86,18 @@ export function lineError(lines: LineInput[], catalogue: Catalogue): FieldError 
   return null
 }
 
+/** A plan can be chosen only while it is active and the date falls inside its availability window. */
+export function planAvailableOn(
+  plan: Pick<Plan, 'active' | 'availableFrom' | 'availableTo'>,
+  date: string,
+) {
+  return (
+    plan.active &&
+    (!plan.availableFrom || date >= plan.availableFrom) &&
+    (!plan.availableTo || date <= plan.availableTo)
+  )
+}
+
 export function planError(
   plan: Plan,
   input: { startDate: string; planQuantity: number },

@@ -1,6 +1,7 @@
 import { createServerFn } from '@tanstack/react-start'
 import { db } from '~/db/client'
 import {
+  getInvoicesTable,
   getOverdueTable,
   getPaymentsTable,
   getSubscriptionsTable,
@@ -38,4 +39,12 @@ export const getDashboardSubscriptions = createServerFn({ method: 'GET' })
     await requireRole('admin', 'staff')
     const { page, ...filters } = data
     return getSubscriptionsTable(db, filters, page)
+  })
+
+export const getDashboardInvoices = createServerFn({ method: 'GET' })
+  .validator(dashboardTableSchema)
+  .handler(async ({ data }) => {
+    await requireRole('admin', 'staff')
+    const { page, ...filters } = data
+    return getInvoicesTable(db, filters, page)
   })

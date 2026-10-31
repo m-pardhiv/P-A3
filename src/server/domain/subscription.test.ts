@@ -3,6 +3,7 @@ import {
   type Catalogue,
   lineError,
   mergeLines,
+  planAvailableOn,
   planError,
   planLine,
   productLine,
@@ -140,5 +141,26 @@ describe('renewalDates', () => {
       startDate: '2027-01-01',
       expiryDate: '2027-12-31',
     })
+  })
+})
+
+describe('planAvailableOn', () => {
+  const plan = { active: true, availableFrom: '2026-01-01', availableTo: '2026-06-30' }
+
+  it('is available inside the window, including both ends', () => {
+    expect(planAvailableOn(plan, '2026-01-01')).toBe(true)
+    expect(planAvailableOn(plan, '2026-06-30')).toBe(true)
+  })
+
+  it('is unavailable before it opens and after it ends', () => {
+    expect(planAvailableOn(plan, '2025-12-31')).toBe(false)
+    expect(planAvailableOn(plan, '2026-07-01')).toBe(false)
+  })
+
+  it('is unavailable when switched off, and open-ended without dates', () => {
+    expect(planAvailableOn({ ...plan, active: false }, '2026-03-01')).toBe(false)
+    expect(
+      planAvailableOn({ active: true, availableFrom: null, availableTo: null }, '2030-01-01'),
+    ).toBe(true)
   })
 })

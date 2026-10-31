@@ -9,7 +9,12 @@ import { RecordPaymentForm } from '~/components/record-payment-form'
 import { StatusBadge } from '~/components/status-badge'
 import { useToast } from '~/components/toast'
 import { formatDate, formatDateTime, formatMoney } from '~/lib/format'
-import { getInvoiceFn, runInvoiceAction, sendInvoiceFn } from '~/server/functions/invoices'
+import {
+  getInvoiceFn,
+  runInvoiceAction,
+  sendInvoiceFn,
+  sendReminderFn,
+} from '~/server/functions/invoices'
 
 const invoiceQuery = (id: string) =>
   queryOptions({
@@ -51,8 +56,18 @@ function InvoicePage() {
     onError: () => toast('That did not work. Try again.', 'danger'),
   })
 
+  const remind = useMutation({
+    mutationFn: () => sendReminderFn({ data: { id } }),
+    onSuccess: async (result) => {
+      await queryClient.invalidateQueries()
+      if (!result.ok) return toast(result.error ?? 'That did not work', 'danger')
+      toast(`Reminder sent to ${result.data.to}`)
+    },
+    onError: () => toast('That did not work. Try again.', 'danger'),
+  })
+
   const amountDue = invoice.status === 'cancelled' ? 0 : invoice.total - invoice.amountPaid
-  const busy = act.isPending || send.isPending
+  const busy = act.isPending || send.isPending || remind.isPending
 
   return (
     <>
@@ -79,6 +94,16 @@ function InvoicePage() {
                 onClick={() => send.mutate()}
               >
                 {invoice.sentAt ? 'Send again' : 'Send to customer'}
+              </button>
+            ) : null}
+            {data.canRemind ? (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                disabled={busy}
+                onClick={() => remind.mutate()}
+              >
+                Send reminder
               </button>
             ) : null}
             <Link
@@ -159,6 +184,27 @@ function InvoicePage() {
           <h2 className="mb-4 text-xl font-semibold">Payments</h2>
           <PaymentsTable payments={payments} showNotes />
         </section>
+
+        {data.reminders.length > 0 ? (
+          <section className="panel">
+            <h2 className="mb-4 text-xl font-semibold">Reminders</h2>
+            <ul className="flex flex-col divide-y divide-line">
+              {data.reminders.map((reminder) => (
+                <li
+                  key={reminder.id}
+                  className="flex flex-wrap items-baseline justify-between gap-2 py-2"
+                >
+                  <span>
+                    {reminder.delivered ? 'Sent' : 'Failed'} to {reminder.toEmail}
+                    {reminder.sentByName ? ` by ${reminder.sentByName}` : ''}
+                    {reminder.error ? ` (${reminder.error})` : ''}
+                  </span>
+                  <span className="text-sm text-muted">{formatDateTime(reminder.createdAt)}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
 
         {data.canPay ? (
           <section className="panel">

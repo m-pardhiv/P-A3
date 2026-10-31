@@ -40,6 +40,8 @@ export const recordPaymentSchema = z.object({
   amount: moneySchema,
   paidOn: dateSchema,
   note: optionalText,
+  /** Made when the form loads, so a double click or a retry records one payment. */
+  idempotencyKey: z.uuid('Reload the page and try again'),
 })
 
 export const runBillingSchema = z.object({ asOf: dateSchema })

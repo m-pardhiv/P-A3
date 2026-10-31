@@ -31,11 +31,12 @@ export function CustomerForm({ customer }: { customer?: Customer }) {
   })
 
   return (
-    <form onSubmit={form.onSubmit} noValidate className="panel flex flex-col gap-4">
+    <form onSubmit={form.onSubmit} method="post" noValidate className="panel flex flex-col gap-4">
       <FormError message={form.formError} />
       <input type="hidden" name="id" value={customer?.id ?? ''} />
       <FormField
         label="Name"
+        required
         name="name"
         defaultValue={customer?.name}
         error={form.fieldErrors.name}
@@ -49,6 +50,7 @@ export function CustomerForm({ customer }: { customer?: Customer }) {
       <div className="grid gap-4 sm:grid-cols-2">
         <FormField
           label="Email"
+          required
           name="email"
           type="email"
           defaultValue={customer?.email}

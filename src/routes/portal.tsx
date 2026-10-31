@@ -5,7 +5,10 @@ export const Route = createFileRoute('/portal')({
   beforeLoad: ({ context }) => {
     if (!context.user) throw redirect({ to: '/login' })
     if (context.user.role !== 'customer')
-      throw redirect({ to: '/dashboard', search: { payPage: 1, overduePage: 1, subPage: 1 } })
+      throw redirect({
+        to: '/dashboard',
+        search: { payPage: 1, overduePage: 1, subPage: 1, invoicePage: 1 },
+      })
     return { user: context.user }
   },
   component: PortalRoute,

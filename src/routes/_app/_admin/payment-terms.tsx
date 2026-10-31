@@ -51,17 +51,19 @@ function TermForm({ term, onDone }: { term?: Term; onDone: () => void }) {
       <h2 className="mb-4 text-xl font-semibold">
         {term ? 'Edit payment terms' : 'New payment terms'}
       </h2>
-      <form onSubmit={form.onSubmit} noValidate className="flex flex-col gap-4">
+      <form onSubmit={form.onSubmit} method="post" noValidate className="flex flex-col gap-4">
         <FormError message={form.formError} />
         <input type="hidden" name="id" value={term?.id ?? ''} />
         <FormField
           label="Name"
+          required
           name="name"
           defaultValue={term?.name}
           error={form.fieldErrors.name}
         />
         <FormField
           label="Days until due"
+          required
           name="daysDue"
           inputMode="numeric"
           defaultValue={term?.daysDue}

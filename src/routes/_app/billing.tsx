@@ -82,10 +82,11 @@ function BillingPage() {
         <p className="mb-4 text-sm text-muted">
           Running it again for the same date creates nothing new, so it is safe to press twice.
         </p>
-        <form onSubmit={submit} noValidate className="flex flex-wrap items-end gap-3">
+        <form onSubmit={submit} method="post" noValidate className="flex flex-wrap items-end gap-3">
           <div className="w-full sm:w-56">
             <FormField
               label="Bill everything due up to"
+              required
               name="asOf"
               type="date"
               value={asOf}

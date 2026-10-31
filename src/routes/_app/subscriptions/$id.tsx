@@ -10,11 +10,13 @@ import { StatusTimeline } from '~/components/status-timeline'
 import { useToast } from '~/components/toast'
 import { Totals } from '~/components/totals'
 import { useZodForm } from '~/components/use-zod-form'
-import { capitalize, formatDate, formatMoney } from '~/lib/format'
+import { capitalize, formatDate, formatDateTime, formatMoney, humanize } from '~/lib/format'
 import { formOptionsQuery } from '~/lib/queries'
 import {
   getSubscription,
+  getSubscriptionEvents,
   runSubscriptionAction,
+  sendQuotationFn,
   updateSubscriptionLines,
 } from '~/server/functions/subscriptions'
 import { updateLinesSchema } from '~/shared/schemas/subscriptions'
@@ -25,10 +27,17 @@ const subscriptionQuery = (id: string) =>
     queryFn: () => getSubscription({ data: { id } }),
   })
 
+const eventsQuery = (id: string) =>
+  queryOptions({
+    queryKey: ['subscription-events', id],
+    queryFn: () => getSubscriptionEvents({ data: { id } }),
+  })
+
 export const Route = createFileRoute('/_app/subscriptions/$id')({
   loader: ({ context, params }) =>
     Promise.all([
       context.queryClient.query(subscriptionQuery(params.id)),
+      context.queryClient.query(eventsQuery(params.id)),
       context.queryClient.query(formOptionsQuery),
     ]),
   component: SubscriptionPage,
@@ -81,8 +90,39 @@ function ActionButtons({ subscription }: { subscription: Subscription }) {
     onError: () => toast('That did not work. Try again.', 'danger'),
   })
 
+  const email = useMutation({
+    mutationFn: () => sendQuotationFn({ data: { id: subscription.id } }),
+    onSuccess: async (result) => {
+      await queryClient.invalidateQueries()
+      if (!result.ok) return toast(result.error ?? 'That did not work', 'danger')
+      toast(`Quotation sent to ${result.data.to}`)
+    },
+    onError: () => toast('That did not work. Try again.', 'danger'),
+  })
+  const quotable = ['draft', 'quotation', 'confirmed'].includes(subscription.status)
+
   return (
     <div className="flex flex-wrap gap-2">
+      {subscription.status === 'quotation' && !subscription.quotationExpired ? (
+        <button
+          type="button"
+          className="btn btn-secondary"
+          disabled={run.isPending || email.isPending}
+          onClick={() => email.mutate()}
+        >
+          {subscription.quotationSentAt ? 'Email quotation again' : 'Email quotation'}
+        </button>
+      ) : null}
+      {quotable ? (
+        <Link
+          to="/print/quotation/$id"
+          params={{ id: subscription.id }}
+          target="_blank"
+          className="btn btn-secondary"
+        >
+          Print quotation
+        </Link>
+      ) : null}
       {subscription.actions.map((action, index) => (
         <button
           key={action}
@@ -139,11 +179,12 @@ function LinesEditor(props: { subscription: Subscription; onDone: () => void }) 
   })
 
   return (
-    <form onSubmit={form.onSubmit} noValidate className="flex flex-col gap-4">
+    <form onSubmit={form.onSubmit} method="post" noValidate className="flex flex-col gap-4">
       <FormError message={form.formError} />
       <div className="max-w-xs">
         <FormField
           label={`${subscription.plan.name} quantity`}
+          required
           name="planQuantity"
           inputMode="numeric"
           defaultValue={planLine?.quantity}
@@ -172,6 +213,7 @@ function LinesEditor(props: { subscription: Subscription; onDone: () => void }) 
 function SubscriptionPage() {
   const { id } = Route.useParams()
   const { data } = useSuspenseQuery(subscriptionQuery(id))
+  const { data: events } = useSuspenseQuery(eventsQuery(id))
   const [editing, setEditing] = useState(false)
 
   const facts: [string, React.ReactNode][] = [
@@ -200,6 +242,7 @@ function SubscriptionPage() {
     ],
     ['Quotation valid until', formatDate(data.quotationValidUntil)],
     ['Template', data.templateName ?? 'None'],
+    ['Quotation emailed', data.quotationSentAt ? formatDateTime(data.quotationSentAt) : 'Not yet'],
   ]
 
   return (
@@ -306,6 +349,29 @@ function SubscriptionPage() {
               />
             </>
           )}
+        </section>
+
+        <section className="panel">
+          <h2 className="mb-4 text-xl font-semibold">History</h2>
+          <ol className="flex flex-col divide-y divide-line">
+            {events.map((event) => (
+              <li
+                key={event.id}
+                className="flex flex-wrap items-baseline justify-between gap-2 py-2"
+              >
+                <span>
+                  {humanize(event.action)}
+                  {event.fromStatus && event.fromStatus !== event.toStatus
+                    ? `: ${capitalize(event.fromStatus)} to ${capitalize(event.toStatus)}`
+                    : event.fromStatus === null
+                      ? ` as ${capitalize(event.toStatus)}`
+                      : ''}
+                  <span className="text-muted"> by {event.actorName ?? 'billing'}</span>
+                </span>
+                <span className="text-sm text-muted">{formatDateTime(event.createdAt)}</span>
+              </li>
+            ))}
+          </ol>
         </section>
       </div>
     </>

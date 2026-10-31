@@ -7,7 +7,9 @@ Built with TanStack Start, Drizzle ORM, Tailwind CSS and PostgreSQL.
 
 ## Setup
 
-You need Node 24, pnpm and PostgreSQL 16 or newer running on this machine.
+You need Node 24 (22 also works; `.nvmrc` pins 24), pnpm and PostgreSQL 16 or newer running on this
+machine. A hosted Postgres such as Supabase works too: put its Session pooler URL in `DATABASE_URL`.
+It is reached over TLS automatically, and the app never needs the provider's own APIs.
 
 ```sh
 pnpm install
@@ -82,6 +84,8 @@ flowchart LR
 | Command                | What it does                                                               |
 | ---------------------- | -------------------------------------------------------------------------- |
 | `pnpm dev`             | Starts the app on port 3000                                                |
+| `pnpm build`           | Builds the production bundle                                               |
+| `pnpm start`           | Runs the built app (`NODE_ENV=production`), serving pages and static files |
 | `pnpm db:generate`     | Writes a migration from `src/db/schema.ts`                                 |
 | `pnpm db:migrate`      | Applies migrations                                                         |
 | `pnpm db:seed`         | Adds demo data, with billing history, to an empty database                 |
@@ -90,12 +94,36 @@ flowchart LR
 | `pnpm db:seed:perf`    | Adds about 5,000 subscriptions and 30,000 invoices; `--clean` removes them |
 | `pnpm db:explain`      | Runs `EXPLAIN ANALYZE` on the dashboard queries                            |
 | `pnpm test`            | Runs Vitest, including the database tests                                  |
+| `pnpm test:e2e`        | Browser checks of the main flows, against a running app (see below)        |
 | `pnpm typecheck`       | Runs TypeScript                                                            |
 | `pnpm lint`            | Runs Biome                                                                 |
 
 `db:seed:perf` only runs on a database whose name ends in `_test` or `_perf`, to protect the demo.
 For example, set `DATABASE_URL` to the `brightloop_test` database for one command, run
 `pnpm db:setup`, `pnpm db:seed:perf` and `pnpm db:explain`, then `pnpm db:seed:perf --clean`.
+
+## End-to-end checks
+
+`pnpm test:e2e` drives a real browser through the main flows: sign up, sign in as each role,
+billing (and billing again), invoices, partial and full payment, reminders, quotations, the
+portal's data isolation, rate limiting and 375 px layouts. It changes data, so it only runs against
+a database on this machine, and should be run on a freshly seeded one:
+
+```sh
+pnpm db:seed --reset
+pnpm dev > /tmp/dev.log 2>&1 &
+E2E_SERVER_LOG=/tmp/dev.log pnpm test:e2e
+```
+
+It needs a Chromium. Run `pnpm exec playwright-core install chromium`, or set `CHROMIUM_PATH` to
+one you already have.
+
+## Going live
+
+`docs/OPERATIONS.md` covers production: environment variables, HTTPS, creating the first admin,
+health checks and logs, backups and restores, and rate limiting. The short version:
+`pnpm db:migrate && pnpm build && NODE_ENV=production pnpm start`. The demo seed is blocked in
+production and on any database that is not on this machine.
 
 ## Email
 
@@ -106,9 +134,11 @@ SMTP provider, emails fail.
 
 ## Daily billing
 
-The server starts a plain interval on its first request (no job library). It checks every ten minutes
-and, during `BILLING_HOUR` (2 am India time by default), runs billing if no scheduled run has happened
-that day. If the server was off then, the next run catches up every missed period. Set
+The server starts a plain interval when it boots, and on its first request in development (no job
+library). It checks straight away and then every ten minutes, and from `BILLING_HOUR` (2 am India
+time by default) onwards runs billing if no scheduled run has happened that day. So a server that
+was down at 2 am still bills the same day when it comes back, and it catches up every missed
+period. Set
 `BILLING_SCHEDULER=off` in `.env` to bill only from the Billing page, which is handy for demos.
 
 ## Assumptions
@@ -190,5 +220,30 @@ that day. If the server was off then, the next run catches up every missed perio
 - Customers see issued invoices (confirmed and paid) and subscriptions beyond the draft stage.
 - Customers can pause, resume or close a running subscription where the plan allows it, through the
   same state machine staff use.
+- A customer can also print a quotation addressed to them (never a draft) and sees the plans that
+  are open today on the Plans tab.
 - The seed has 16 subscriptions across every status. One quotation is already expired, one plan
   (Launch offer) is past its availability window, and the last draft is a renewal of the closed one.
+
+### Added after review
+
+- **Quotations** are subscriptions in the Quotation status, so there is one record from the first
+  offer to the running subscription. Converting one is the Confirm step: nothing is copied, so it
+  cannot be converted twice, and its lines, prices and tax stay exactly as they were. Staff can
+  email the quotation to the customer once it has been sent for approval and has not expired, and
+  print it from the subscription page.
+- **Subscription history** records every move (who, from which status, to which, and when), including
+  the ones billing makes by itself, such as activating on the start date or closing at expiry.
+- **Payment reminders** can be sent for an overdue invoice with money still owed. One delivered
+  reminder per invoice per day. A failed send is recorded as failed and can be retried. The
+  dashboard's overdue table shows how many reminders each invoice has had.
+- **Duplicate payments:** the payment form makes a key when it loads, and the same key twice records
+  one payment. Two different payments are still allowed, up to the invoice total.
+- **Rate limiting** is in the server's memory (see `docs/OPERATIONS.md`), so it is per process and
+  resets on a restart.
+- **Dashboard invoice filter:** the date range there narrows revenue and payments by payment date,
+  and the Invoices table by issue date, and only when a range has been chosen.
+- **Required fields** are marked with an asterisk.
+- **Hosted Postgres:** the brief called for local Postgres, and that is what the project runs on.
+  Row Level Security stays on for every table with no policies, so a hosted provider's public API
+  cannot read them either.

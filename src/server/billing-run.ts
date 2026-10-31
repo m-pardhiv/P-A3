@@ -16,6 +16,8 @@ import {
 import { clock } from './clock'
 import { buildInvoice, duePeriods } from './domain/billing'
 import type { DiscountRule } from './domain/discounts'
+import { log } from './log'
+import { recordSubscriptionEvents } from './subscription-events'
 
 export type SubscriptionOutcome = {
   subscriptionId: string
@@ -58,6 +60,16 @@ export async function runBilling(
     .set({ status: 'active', nextInvoiceDate: sql`${subscriptions.startDate}` })
     .where(and(eq(subscriptions.status, 'confirmed'), lte(subscriptions.startDate, asOf)))
     .returning({ id: subscriptions.id })
+  await recordSubscriptionEvents(
+    database,
+    activated.map(({ id }) => ({
+      subscriptionId: id,
+      action: 'activate',
+      fromStatus: 'confirmed' as const,
+      toStatus: 'active' as const,
+      actorId: null,
+    })),
+  )
 
   const due = await database
     .select({ id: subscriptions.id })
@@ -71,6 +83,7 @@ export async function runBilling(
       const outcome = await database.transaction((tx) => billSubscription(tx, id, asOf))
       if (outcome) outcomes.push(outcome)
     } catch (error) {
+      log.error('billing_subscription_failed', error)
       outcomes.push({
         subscriptionId: id,
         number: '',
@@ -97,6 +110,16 @@ export async function runBilling(
       ),
     )
     .returning({ id: subscriptions.id })
+  await recordSubscriptionEvents(
+    database,
+    closed.map(({ id }) => ({
+      subscriptionId: id,
+      action: 'auto_close',
+      fromStatus: null,
+      toStatus: 'closed' as const,
+      actorId: null,
+    })),
+  )
 
   const created = outcomes.reduce((sum, o) => sum + o.created, 0)
   const skipped = outcomes.reduce((sum, o) => sum + o.skipped, 0)

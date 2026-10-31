@@ -1,3 +1,4 @@
+import { notFound } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import { and, asc, count, desc, eq, getTableColumns, ilike, or, sql } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
@@ -30,12 +31,14 @@ import {
 } from '~/server/domain/subscription-state'
 import { taxOn } from '~/server/domain/tax'
 import { containsPattern, requireFound, requireUuid } from '~/server/not-found'
-import { requireRole } from '~/server/session'
+import { getQuotation, sendQuotation } from '~/server/quotations'
+import { getSessionUser, requireRole } from '~/server/session'
 import {
   loadSubscriptionContext as loadContext,
   lockSubscription,
   performSubscriptionAction,
 } from '~/server/subscription-core'
+import { listSubscriptionEvents, recordSubscriptionEvents } from '~/server/subscription-events'
 import type { ActionResult } from '~/shared/result'
 import { idInput } from '~/shared/schemas/fields'
 import { PAGE_SIZE } from '~/shared/schemas/pagination'
@@ -169,6 +172,15 @@ export const createSubscription = createServerFn({ method: 'POST' })
           quotationValidUntil: template ? addDays(clock.today(), template.validityDays) : null,
         })
         .returning({ id: subscriptions.id })
+      await recordSubscriptionEvents(tx, [
+        {
+          subscriptionId: created.id,
+          action: 'created',
+          fromStatus: null,
+          toStatus: 'draft',
+          actorId: user.id,
+        },
+      ])
       const priced = [
         planLine(plan, planQuantity, catalogue.taxRules),
         ...lines.map((line) => productLine(line, catalogue)),
@@ -184,7 +196,7 @@ export const createSubscription = createServerFn({ method: 'POST' })
 export const updateSubscriptionLines = createServerFn({ method: 'POST' })
   .validator(updateLinesSchema)
   .handler(async ({ data }): Promise<ActionResult> => {
-    await requireRole('admin', 'staff')
+    const user = await requireRole('admin', 'staff')
     return db.transaction(async (tx) => {
       await lockSubscription(tx, data.id)
       const found = await loadContext(tx, data.id)
@@ -220,6 +232,15 @@ export const updateSubscriptionLines = createServerFn({ method: 'POST' })
           amount: line.amount,
         })),
       )
+      await recordSubscriptionEvents(tx, [
+        {
+          subscriptionId: data.id,
+          action: 'lines_updated',
+          fromStatus: found.subscription.status,
+          toStatus: found.subscription.status,
+          actorId: user.id,
+        },
+      ])
       return { ok: true, data: undefined }
     })
   })
@@ -229,4 +250,37 @@ export const runSubscriptionAction = createServerFn({ method: 'POST' })
   .handler(async ({ data }): Promise<ActionResult<{ id: string }>> => {
     const user = await requireRole('admin', 'staff')
     return performSubscriptionAction(db, { ...data, actorId: user.id })
+  })
+
+export const sendQuotationFn = createServerFn({ method: 'POST' })
+  .validator(idInput)
+  .handler(async ({ data }): Promise<ActionResult<{ to: string }>> => {
+    const user = await requireRole('admin', 'staff')
+    return sendQuotation(db, { id: requireUuid(data.id), actorId: user.id })
+  })
+
+/** The print page is shared: staff may print any quotation, a customer only their own. */
+export const getQuotationDocument = createServerFn({ method: 'GET' })
+  .validator(idInput)
+  .handler(async ({ data }) => {
+    const user = await getSessionUser()
+    if (!user) throw notFound()
+    const id = requireUuid(data.id)
+
+    let scope: { customerId: string } | undefined
+    if (user.role === 'customer') {
+      const [own] = await db
+        .select({ id: customers.id })
+        .from(customers)
+        .where(eq(customers.userId, user.id))
+      scope = { customerId: requireFound(own).id }
+    }
+    return requireFound(await getQuotation(db, id, scope))
+  })
+
+export const getSubscriptionEvents = createServerFn({ method: 'GET' })
+  .validator(idInput)
+  .handler(async ({ data }) => {
+    await requireRole('admin', 'staff')
+    return listSubscriptionEvents(db, requireUuid(data.id))
   })

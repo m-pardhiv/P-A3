@@ -1,6 +1,8 @@
 import { PgDialect } from 'drizzle-orm/pg-core'
 import {
   activeAndMrrSql,
+  invoicesCountQuery,
+  invoicesQuery,
   overdueCountQuery,
   overdueQuery,
   owedSql,
@@ -29,6 +31,8 @@ const queries: [string, { sql: string; params: unknown[] }][] = [
   ['Recent payments, count', paymentsCountQuery(db, filters).toSQL()],
   ['Overdue invoices, page 1', overdueQuery(db, filters, 1).toSQL()],
   ['Overdue invoices, count', overdueCountQuery(db, filters).toSQL()],
+  ['Invoices, page 1', invoicesQuery(db, filters, 1).toSQL()],
+  ['Invoices, count', invoicesCountQuery(db, filters).toSQL()],
   ['Subscriptions, page 1', subscriptionsQuery(db, filters, 1).toSQL()],
   ['Subscriptions, count', subscriptionsCountQuery(db, filters).toSQL()],
 ]

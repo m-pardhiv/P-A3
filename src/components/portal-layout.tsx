@@ -26,6 +26,9 @@ export function PortalLayout({ user, children }: { user: SessionUser; children: 
             <Link to="/portal/invoices" search={{ page: 1 }} className="portal-tab">
               My Invoices
             </Link>
+            <Link to="/portal/plans" className="portal-tab">
+              Plans
+            </Link>
             <Link to="/portal/profile" className="portal-tab">
               Profile
             </Link>

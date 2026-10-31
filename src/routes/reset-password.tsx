@@ -45,11 +45,12 @@ function ResetPasswordPage() {
 
   return (
     <AuthLayout title="Choose a new password">
-      <form onSubmit={form.onSubmit} noValidate className="flex flex-col gap-4">
+      <form onSubmit={form.onSubmit} method="post" noValidate className="flex flex-col gap-4">
         <FormError message={form.formError} />
         <input type="hidden" name="token" value={token} />
         <FormField
           label="New password"
+          required
           name="password"
           type="password"
           autoComplete="new-password"
@@ -58,6 +59,7 @@ function ResetPasswordPage() {
         />
         <FormField
           label="Confirm new password"
+          required
           name="confirmPassword"
           type="password"
           autoComplete="new-password"

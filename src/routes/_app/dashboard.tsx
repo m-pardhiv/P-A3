@@ -9,12 +9,14 @@ import { StatusBadge } from '~/components/status-badge'
 import { capitalize, formatDate, formatMoney, humanize } from '~/lib/format'
 import { formOptionsQuery } from '~/lib/queries'
 import {
+  getDashboardInvoices,
   getDashboardOverdue,
   getDashboardPayments,
   getDashboardSubscriptions,
   getDashboardSummary,
 } from '~/server/functions/dashboard'
 import { dashboardSearchSchema } from '~/shared/schemas/dashboard'
+import { INVOICE_STATUSES } from '~/shared/schemas/invoices'
 import { SUBSCRIPTION_STATUSES } from '~/shared/schemas/subscriptions'
 
 type Search = z.output<typeof dashboardSearchSchema>
@@ -25,6 +27,7 @@ const filtersOf = (search: Search) => ({
   planId: search.planId,
   customerId: search.customerId,
   status: search.status,
+  invoiceStatus: search.invoiceStatus,
 })
 
 const summaryQuery = (search: Search) =>
@@ -43,6 +46,12 @@ const overdueQuery = (search: Search) =>
     queryFn: () =>
       getDashboardOverdue({ data: { ...filtersOf(search), page: search.overduePage } }),
   })
+const invoicesQuery = (search: Search) =>
+  queryOptions({
+    queryKey: ['dashboard', 'invoices', filtersOf(search), search.invoicePage],
+    queryFn: () =>
+      getDashboardInvoices({ data: { ...filtersOf(search), page: search.invoicePage } }),
+  })
 const subscriptionsQuery = (search: Search) =>
   queryOptions({
     queryKey: ['dashboard', 'subscriptions', filtersOf(search), search.subPage],
@@ -59,6 +68,7 @@ export const Route = createFileRoute('/_app/dashboard')({
       context.queryClient.query(paymentsQuery(deps)),
       context.queryClient.query(overdueQuery(deps)),
       context.queryClient.query(subscriptionsQuery(deps)),
+      context.queryClient.query(invoicesQuery(deps)),
       context.queryClient.query(formOptionsQuery),
     ]),
   component: DashboardPage,
@@ -89,14 +99,22 @@ function DashboardPage() {
   const { data: payments } = useSuspenseQuery(paymentsQuery(search))
   const { data: overdue } = useSuspenseQuery(overdueQuery(search))
   const { data: subscriptions } = useSuspenseQuery(subscriptionsQuery(search))
+  const { data: invoices } = useSuspenseQuery(invoicesQuery(search))
   const { data: options } = useSuspenseQuery(formOptionsQuery)
 
   const filtered = Boolean(
-    search.from || search.to || search.planId || search.customerId || search.status,
+    search.from ||
+      search.to ||
+      search.planId ||
+      search.customerId ||
+      search.status ||
+      search.invoiceStatus,
   )
   // Changing a filter starts every table from its first page again.
   const setFilter = (patch: Partial<Search>) =>
-    navigate({ search: { ...search, ...patch, payPage: 1, overduePage: 1, subPage: 1 } })
+    navigate({
+      search: { ...search, ...patch, payPage: 1, overduePage: 1, subPage: 1, invoicePage: 1 },
+    })
 
   const largestBucket = Math.max(...summary.ageing.map((bucket) => bucket.amount), 1)
 
@@ -133,11 +151,24 @@ function DashboardPage() {
             options={SUBSCRIPTION_STATUSES.map((value) => ({ value, label: capitalize(value) }))}
             onChange={(status) => setFilter({ status: status as Search['status'] })}
           />
+          <FilterSelect
+            label="All invoice statuses"
+            value={search.invoiceStatus}
+            options={[...INVOICE_STATUSES, 'overdue'].map((value) => ({
+              value,
+              label: capitalize(value),
+            }))}
+            onChange={(invoiceStatus) =>
+              setFilter({ invoiceStatus: invoiceStatus as Search['invoiceStatus'] })
+            }
+          />
           {filtered ? (
             <button
               type="button"
               className="btn btn-secondary"
-              onClick={() => navigate({ search: { payPage: 1, overduePage: 1, subPage: 1 } })}
+              onClick={() =>
+                navigate({ search: { payPage: 1, overduePage: 1, subPage: 1, invoicePage: 1 } })
+              }
             >
               Clear filters
             </button>
@@ -275,9 +306,60 @@ function DashboardPage() {
                 cell: (row) => row.daysOverdue,
               },
               {
+                header: 'Reminders sent',
+                align: 'right',
+                cell: (row) => row.reminders,
+              },
+              {
                 header: 'Amount due',
                 align: 'right',
                 cell: (row) => formatMoney(row.total - row.amountPaid),
+              },
+            ]}
+          />
+        </section>
+
+        <section>
+          <h2 className="mb-3 text-xl font-semibold">Invoices</h2>
+          <DataTable
+            data={invoices}
+            rowKey={(row) => row.id}
+            onPageChange={(invoicePage) => navigate({ search: { ...search, invoicePage } })}
+            empty={<EmptyState title="No invoices match" message="Clear a filter to see more." />}
+            columns={[
+              {
+                header: 'Invoice',
+                cell: (row) => (
+                  <Link
+                    to="/invoices/$id"
+                    params={{ id: row.id }}
+                    className="link whitespace-nowrap"
+                  >
+                    {row.number}
+                  </Link>
+                ),
+              },
+              { header: 'Customer', cell: (row) => row.customerName },
+              {
+                header: 'Status',
+                cell: (row) => <StatusBadge status={row.overdue ? 'overdue' : row.status} />,
+              },
+              {
+                header: 'Issued',
+                cell: (row) => (
+                  <span className="whitespace-nowrap">{formatDate(row.issueDate)}</span>
+                ),
+              },
+              {
+                header: 'Due',
+                cell: (row) => <span className="whitespace-nowrap">{formatDate(row.dueDate)}</span>,
+              },
+              { header: 'Total', align: 'right', cell: (row) => formatMoney(row.total) },
+              {
+                header: 'Amount due',
+                align: 'right',
+                cell: (row) =>
+                  formatMoney(row.status === 'cancelled' ? 0 : row.total - row.amountPaid),
               },
             ]}
           />

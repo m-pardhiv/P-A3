@@ -98,6 +98,19 @@ function MySubscriptionPage() {
             <Link to="/portal/invoices" search={{ page: 1 }} className="link">
               See your invoices
             </Link>
+            {['quotation', 'confirmed'].includes(data.status) ? (
+              <>
+                {' · '}
+                <Link
+                  to="/print/quotation/$id"
+                  params={{ id: data.id }}
+                  target="_blank"
+                  className="link"
+                >
+                  Print quotation
+                </Link>
+              </>
+            ) : null}
           </p>
         </section>
 

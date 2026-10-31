@@ -322,6 +322,8 @@ export const subscriptions = pgTable(
       onDelete: 'set null',
     }),
     createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+    /** When the quotation was last emailed to the customer. */
+    quotationSentAt: timestamp('quotation_sent_at', { withTimezone: true }),
     createdAt: createdAt(),
   },
   (t) => [
@@ -461,6 +463,8 @@ export const payments = pgTable(
     recordedBy: uuid('recorded_by')
       .notNull()
       .references(() => users.id, { onDelete: 'restrict' }),
+    /** One per form load, so submitting the same form twice records one payment. */
+    idempotencyKey: uuid('idempotency_key').unique(),
     createdAt: createdAt(),
   },
   (t) => [
@@ -488,4 +492,40 @@ export const billingRuns = pgTable(
     check('billing_runs_skipped_check', sql`${t.skippedCount} >= 0`),
     check('billing_runs_error_check', sql`${t.errorCount} >= 0`),
   ],
+).enableRLS()
+
+/** Every move a subscription makes, so its history survives later changes. */
+export const subscriptionEvents = pgTable(
+  'subscription_events',
+  {
+    id: id(),
+    subscriptionId: uuid('subscription_id')
+      .notNull()
+      .references(() => subscriptions.id, { onDelete: 'cascade' }),
+    /** created, send, confirm, activate, pause, resume, close, renew, lines_updated, renewed_from. */
+    action: text('action').notNull(),
+    fromStatus: subscriptionStatus('from_status'),
+    toStatus: subscriptionStatus('to_status').notNull(),
+    /** Null when billing made the move. */
+    actorId: uuid('actor_id').references(() => users.id, { onDelete: 'set null' }),
+    createdAt: createdAt(),
+  },
+  (t) => [index('subscription_events_subscription_id_idx').on(t.subscriptionId, t.createdAt)],
+).enableRLS()
+
+/** Each payment reminder emailed for an overdue invoice, including the ones that failed. */
+export const paymentReminders = pgTable(
+  'payment_reminders',
+  {
+    id: id(),
+    invoiceId: uuid('invoice_id')
+      .notNull()
+      .references(() => invoices.id, { onDelete: 'cascade' }),
+    sentBy: uuid('sent_by').references(() => users.id, { onDelete: 'set null' }),
+    toEmail: text('to_email').notNull(),
+    delivered: boolean('delivered').notNull(),
+    error: text('error'),
+    createdAt: createdAt(),
+  },
+  (t) => [index('payment_reminders_invoice_id_idx').on(t.invoiceId, t.createdAt)],
 ).enableRLS()

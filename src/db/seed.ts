@@ -6,6 +6,7 @@ import { clock } from '~/server/clock'
 import { periodStart } from '~/server/domain/billing'
 import { addDays } from '~/server/domain/dates'
 import { type Catalogue, planLine, productLine } from '~/server/domain/subscription'
+import { env } from '~/server/env'
 import { recordPayment } from '~/server/payments'
 import { createDb } from './client'
 import {
@@ -18,11 +19,13 @@ import {
   productVariants,
   quotationTemplateLines,
   quotationTemplates,
+  subscriptionEvents,
   subscriptionLines,
   subscriptions,
   taxRules,
   users,
 } from './schema'
+import { seedBlocker } from './seed-guard'
 
 const DEMO_PASSWORD = 'Brightloop@2026'
 const paise = (rupees: number) => Math.round(rupees * 100)
@@ -45,8 +48,16 @@ const db = createDb(1)
 const client = db.$client
 
 const reset = process.argv.includes('--reset')
-if (reset && process.env.NODE_ENV === 'production') {
-  throw new Error('Refusing to wipe a production database.')
+const blocker = seedBlocker({
+  nodeEnv: process.env.NODE_ENV,
+  databaseUrl: env.DATABASE_URL,
+  reset,
+  allowDemoSeed: process.env.ALLOW_DEMO_SEED === 'true',
+  allowReset: process.env.ALLOW_DB_RESET === 'true',
+})
+if (blocker) {
+  await client.end()
+  throw new Error(blocker)
 }
 
 const existing = await db.select({ id: users.id }).from(users).limit(1)
@@ -459,6 +470,39 @@ const { adminId, staffId } = await db.transaction(async (tx) => {
       })
       .returning({ id: subscriptions.id })
     created.push(subscription)
+
+    // Give each demo subscription the history it would have had on the way to its status.
+    const path = ['draft', 'quotation', 'confirmed', 'active'] as const
+    const reached = demo.status === 'paused' || demo.status === 'closed' ? 'active' : demo.status
+    const steps = path.slice(0, path.indexOf(reached) + 1)
+    const trail = [
+      { action: 'created', from: null, to: 'draft' as const },
+      ...steps.slice(1).map((to, i) => ({
+        action: { quotation: 'send', confirmed: 'confirm', active: 'activate' }[
+          to as string
+        ] as string,
+        from: steps[i],
+        to,
+      })),
+      ...(demo.status === 'paused' || demo.status === 'closed'
+        ? [
+            {
+              action: demo.status === 'paused' ? 'pause' : 'close',
+              from: 'active' as const,
+              to: demo.status,
+            },
+          ]
+        : []),
+    ]
+    await tx.insert(subscriptionEvents).values(
+      trail.map((step) => ({
+        subscriptionId: subscription.id,
+        action: step.action,
+        fromStatus: step.from,
+        toStatus: step.to,
+        actorId: demo.createdBy ?? admin.id,
+      })),
+    )
 
     const priced = [
       planLine(demo.plan, demo.planQuantity ?? demo.plan.minQuantity, rules),

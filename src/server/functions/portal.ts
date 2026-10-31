@@ -1,6 +1,10 @@
 import { notFound } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
+import { asc } from 'drizzle-orm'
 import { db } from '~/db/client'
+import { plans } from '~/db/schema'
+import { clock } from '~/server/clock'
+import { planAvailableOn } from '~/server/domain/subscription'
 import { getInvoice, listInvoices } from '~/server/invoice-queries'
 import { requireUuid } from '~/server/not-found'
 import {
@@ -96,3 +100,27 @@ export const updateMyProfile = createServerFn({ method: 'POST' })
     const { user, customer } = await requireCustomer()
     return saveProfile(db, { userId: user.id, customerId: customer.id }, data)
   })
+
+/** Plans a customer could take out today: active, and inside their availability dates. */
+export const listAvailablePlans = createServerFn({ method: 'GET' }).handler(async () => {
+  await requireCustomer()
+  const today = clock.today()
+  const rows = await db.select().from(plans).orderBy(asc(plans.billingPeriod), asc(plans.price))
+  return {
+    today,
+    plans: rows
+      .filter((plan) => planAvailableOn(plan, today))
+      .map((plan) => ({
+        id: plan.id,
+        name: plan.name,
+        price: plan.price,
+        billingPeriod: plan.billingPeriod,
+        minQuantity: plan.minQuantity,
+        availableTo: plan.availableTo,
+        pausable: plan.pausable,
+        closable: plan.closable,
+        renewable: plan.renewable,
+        autoClose: plan.autoClose,
+      })),
+  }
+})

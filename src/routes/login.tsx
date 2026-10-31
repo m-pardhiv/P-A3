@@ -23,10 +23,11 @@ function LoginPage() {
 
   return (
     <AuthLayout title="Sign in">
-      <form onSubmit={form.onSubmit} noValidate className="flex flex-col gap-4">
+      <form onSubmit={form.onSubmit} method="post" noValidate className="flex flex-col gap-4">
         <FormError message={form.formError} />
         <FormField
           label="Email"
+          required
           name="email"
           type="email"
           autoComplete="email"
@@ -34,6 +35,7 @@ function LoginPage() {
         />
         <FormField
           label="Password"
+          required
           name="password"
           type="password"
           autoComplete="current-password"

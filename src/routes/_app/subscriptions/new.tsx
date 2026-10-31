@@ -88,7 +88,7 @@ function NewSubscriptionPage() {
         title="New subscription"
         breadcrumbs={[{ label: 'Subscriptions', to: '/subscriptions' }]}
       />
-      <form onSubmit={form.onSubmit} noValidate className="flex flex-col gap-6">
+      <form onSubmit={form.onSubmit} method="post" noValidate className="flex flex-col gap-6">
         <section className="panel flex flex-col gap-4">
           <FormError message={form.formError} />
           <SelectField
@@ -102,6 +102,7 @@ function NewSubscriptionPage() {
           />
           <SelectField
             label="Customer"
+            required
             name="customerId"
             defaultValue=""
             placeholder="Choose a customer"
@@ -114,6 +115,7 @@ function NewSubscriptionPage() {
           <div className="grid gap-4 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
             <SelectField
               label="Plan"
+              required
               name="planId"
               value={planId}
               onChange={(event) => choosePlan(event.target.value)}
@@ -126,6 +128,7 @@ function NewSubscriptionPage() {
             />
             <FormField
               label="Plan quantity"
+              required
               name="planQuantity"
               inputMode="numeric"
               value={planQuantity}
@@ -137,6 +140,7 @@ function NewSubscriptionPage() {
           <div className="grid gap-4 sm:grid-cols-3">
             <FormField
               label="Start date"
+              required
               name="startDate"
               type="date"
               defaultValue={options.today}
@@ -151,6 +155,7 @@ function NewSubscriptionPage() {
             />
             <SelectField
               label="Payment terms"
+              required
               name="paymentTermId"
               value={termId}
               onChange={(event) => setTermId(event.target.value)}

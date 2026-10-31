@@ -1,19 +1,39 @@
 import { and, between, count, desc, eq, gt, lt, type SQL, sql } from 'drizzle-orm'
 import type { Executor } from '~/db/client'
-import { customers, invoices, payments, plans, subscriptionLines, subscriptions } from '~/db/schema'
+import {
+  customers,
+  invoices,
+  paymentReminders,
+  payments,
+  plans,
+  subscriptionLines,
+  subscriptions,
+} from '~/db/schema'
 import type { DashboardFilters } from '~/shared/schemas/dashboard'
 import { PAGE_SIZE } from '~/shared/schemas/pagination'
 import { clock } from './clock'
 import { addDays } from './domain/dates'
 
-export type ResolvedFilters = DashboardFilters & { from: string; to: string; today: string }
+export type ResolvedFilters = DashboardFilters & {
+  from: string
+  to: string
+  today: string
+  /** True when the user picked a date range, rather than getting the default one. */
+  rangeSet: boolean
+}
 
 /** The date range defaults to the last 30 days. It narrows revenue and payments only. */
 export function resolveFilters(filters: DashboardFilters): ResolvedFilters {
   const today = clock.today()
   const to = filters.to ?? today
   const from = filters.from ?? addDays(to, -30)
-  return { ...filters, from: from <= to ? from : to, to, today }
+  return {
+    ...filters,
+    from: from <= to ? from : to,
+    to,
+    today,
+    rangeSet: Boolean(filters.from || filters.to),
+  }
 }
 
 // Plan and customer narrow every number on the page. Each SQL fragment names its own tables.
@@ -165,6 +185,10 @@ export const overdueQuery = (database: Executor, f: ResolvedFilters, page: numbe
       amountPaid: invoices.amountPaid,
       customerName: customers.name,
       daysOverdue: sql<number>`(${f.today}::date - ${invoices.dueDate})`.mapWith(Number),
+      reminders: sql<number>`(
+        select count(*)::int from ${paymentReminders}
+        where ${paymentReminders.invoiceId} = ${invoices.id} and ${paymentReminders.delivered}
+      )`.mapWith(Number),
     })
     .from(invoices)
     .innerJoin(subscriptions, eq(subscriptions.id, invoices.subscriptionId))
@@ -246,6 +270,65 @@ export async function getSubscriptionsTable(
   const [rows, [{ total }]] = await Promise.all([
     subscriptionsQuery(database, f, page),
     subscriptionsCountQuery(database, f),
+  ])
+  return { rows, total, page, pageSize: PAGE_SIZE }
+}
+
+/** Invoices by stored status or overdue. The date range applies to the issue date, when one is set. */
+export function invoicesWhere(f: ResolvedFilters) {
+  return and(
+    f.planId ? eq(subscriptions.planId, f.planId) : undefined,
+    f.customerId ? eq(invoices.customerId, f.customerId) : undefined,
+    f.rangeSet ? between(invoices.issueDate, f.from, f.to) : undefined,
+    f.invoiceStatus === 'overdue'
+      ? and(
+          eq(invoices.status, 'confirmed'),
+          gt(invoices.total, invoices.amountPaid),
+          lt(invoices.dueDate, f.today),
+        )
+      : f.invoiceStatus
+        ? eq(invoices.status, f.invoiceStatus)
+        : undefined,
+  )
+}
+
+export const invoicesQuery = (database: Executor, f: ResolvedFilters, page: number) =>
+  database
+    .select({
+      id: invoices.id,
+      number: invoices.number,
+      status: invoices.status,
+      issueDate: invoices.issueDate,
+      dueDate: invoices.dueDate,
+      total: invoices.total,
+      amountPaid: invoices.amountPaid,
+      customerName: customers.name,
+      overdue: sql<boolean>`(${invoices.status} = 'confirmed' and ${invoices.total} - ${invoices.amountPaid} > 0 and ${invoices.dueDate} < ${f.today}::date)`,
+    })
+    .from(invoices)
+    .innerJoin(subscriptions, eq(subscriptions.id, invoices.subscriptionId))
+    .innerJoin(customers, eq(customers.id, invoices.customerId))
+    .where(invoicesWhere(f))
+    .orderBy(desc(invoices.issueDate), desc(invoices.number))
+    .limit(PAGE_SIZE)
+    .offset(offset(page))
+
+export const invoicesCountQuery = (database: Executor, f: ResolvedFilters) =>
+  database
+    .select({ total: count() })
+    .from(invoices)
+    .innerJoin(subscriptions, eq(subscriptions.id, invoices.subscriptionId))
+    .where(invoicesWhere(f))
+
+export async function getInvoicesTable(
+  database: Executor,
+  filters: DashboardFilters,
+  page: number,
+) {
+  const f = resolveFilters(filters)
+  const [rows, [{ total }]] = await Promise.all([
+    invoicesQuery(database, f, page),
+    invoicesCountQuery(database, f),
   ])
   return { rows, total, page, pageSize: PAGE_SIZE }
 }

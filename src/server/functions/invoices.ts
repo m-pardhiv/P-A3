@@ -12,9 +12,11 @@ import {
 } from '~/server/domain/invoice-state'
 import { env } from '~/server/env'
 import { getInvoice, listInvoices } from '~/server/invoice-queries'
+import { log } from '~/server/log'
 import { sendMail } from '~/server/mail'
 import { requireFound, requireUuid } from '~/server/not-found'
 import { recordPayment } from '~/server/payments'
+import { listReminders, sendPaymentReminder } from '~/server/reminders'
 import { getSessionUser, requireRole } from '~/server/session'
 import type { ActionResult } from '~/shared/result'
 import { idInput } from '~/shared/schemas/fields'
@@ -39,6 +41,8 @@ export const getInvoiceFn = createServerFn({ method: 'GET' })
     const found = requireFound(await getInvoice(db, requireUuid(data.id)))
     return {
       ...found,
+      reminders: await listReminders(db, found.invoice.id),
+      canRemind: found.invoice.overdue,
       actions: allowedInvoiceActions(found.invoice),
       canSend: canSendInvoice(found.invoice.status),
       canPay: found.invoice.status === 'confirmed',
@@ -129,7 +133,8 @@ export const sendInvoiceFn = createServerFn({ method: 'POST' })
         subject: `Invoice ${invoice.number} from Brightloop`,
         text: summary,
       })
-    } catch {
+    } catch (error) {
+      log.error('invoice_email_failed', error)
       return { ok: false, error: 'The email could not be sent. Check the mail settings and retry.' }
     }
     await db.update(invoices).set({ sentAt: clock.now() }).where(eq(invoices.id, data.id))
@@ -141,4 +146,11 @@ export const recordPaymentFn = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     const user = await requireRole('admin', 'staff')
     return recordPayment(db, { ...data, recordedBy: user.id })
+  })
+
+export const sendReminderFn = createServerFn({ method: 'POST' })
+  .validator(sendInvoiceSchema)
+  .handler(async ({ data }): Promise<ActionResult<{ to: string }>> => {
+    const user = await requireRole('admin', 'staff')
+    return sendPaymentReminder(db, { invoiceId: data.id, sentBy: user.id })
   })

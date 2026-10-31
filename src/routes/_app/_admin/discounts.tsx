@@ -64,11 +64,12 @@ function DiscountForm({ discount, onDone }: { discount?: Discount; onDone: () =>
   return (
     <section className="panel">
       <h2 className="mb-4 text-xl font-semibold">{discount ? 'Edit discount' : 'New discount'}</h2>
-      <form onSubmit={form.onSubmit} noValidate className="flex flex-col gap-4">
+      <form onSubmit={form.onSubmit} method="post" noValidate className="flex flex-col gap-4">
         <FormError message={form.formError} />
         <input type="hidden" name="id" value={discount?.id ?? ''} />
         <FormField
           label="Name"
+          required
           name="name"
           defaultValue={discount?.name}
           error={form.fieldErrors.name}
@@ -76,6 +77,7 @@ function DiscountForm({ discount, onDone }: { discount?: Discount; onDone: () =>
         <div className="grid gap-4 sm:grid-cols-2">
           <SelectField
             label="Type"
+            required
             name="kind"
             value={kind}
             onChange={(event) => setKind(event.target.value)}
@@ -87,6 +89,7 @@ function DiscountForm({ discount, onDone }: { discount?: Discount; onDone: () =>
           />
           <FormField
             label={kind === 'percent' ? 'Percentage off' : 'Amount off (₹)'}
+            required
             name="value"
             inputMode="decimal"
             defaultValue={initialValue}
@@ -95,6 +98,7 @@ function DiscountForm({ discount, onDone }: { discount?: Discount; onDone: () =>
         </div>
         <SelectField
           label="Applies to"
+          required
           name="scope"
           value={scope}
           onChange={(event) => setScope(event.target.value)}
@@ -118,6 +122,7 @@ function DiscountForm({ discount, onDone }: { discount?: Discount; onDone: () =>
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField
             label="Minimum purchase (₹)"
+            required
             name="minPurchaseAmount"
             inputMode="decimal"
             defaultValue={discount ? paiseToInput(discount.minPurchaseAmount) : '0'}
@@ -125,6 +130,7 @@ function DiscountForm({ discount, onDone }: { discount?: Discount; onDone: () =>
           />
           <FormField
             label="Minimum quantity"
+            required
             name="minQuantity"
             inputMode="numeric"
             defaultValue={discount?.minQuantity ?? 1}
@@ -132,6 +138,7 @@ function DiscountForm({ discount, onDone }: { discount?: Discount; onDone: () =>
           />
           <FormField
             label="Starts on"
+            required
             name="startDate"
             type="date"
             defaultValue={discount?.startDate ?? options.today}
@@ -139,6 +146,7 @@ function DiscountForm({ discount, onDone }: { discount?: Discount; onDone: () =>
           />
           <FormField
             label="Ends on"
+            required
             name="endDate"
             type="date"
             defaultValue={discount?.endDate}
@@ -147,6 +155,7 @@ function DiscountForm({ discount, onDone }: { discount?: Discount; onDone: () =>
         </div>
         <FormField
           label="Number of uses allowed"
+          required
           name="usageLimit"
           inputMode="numeric"
           defaultValue={discount?.usageLimit ?? 10}

@@ -52,17 +52,19 @@ function RuleForm({ rule, onDone }: { rule?: Rule; onDone: () => void }) {
   return (
     <section className="panel">
       <h2 className="mb-4 text-xl font-semibold">{rule ? 'Edit tax rule' : 'New tax rule'}</h2>
-      <form onSubmit={form.onSubmit} noValidate className="flex flex-col gap-4">
+      <form onSubmit={form.onSubmit} method="post" noValidate className="flex flex-col gap-4">
         <FormError message={form.formError} />
         <input type="hidden" name="id" value={rule?.id ?? ''} />
         <FormField
           label="Name"
+          required
           name="name"
           defaultValue={rule?.name}
           error={form.fieldErrors.name}
         />
         <FormField
           label="Rate (%)"
+          required
           name="ratePercent"
           inputMode="decimal"
           defaultValue={rule?.ratePercent}

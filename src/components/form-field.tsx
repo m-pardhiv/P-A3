@@ -11,15 +11,22 @@ type FieldProps = { label: string; name: string; error?: string; hint?: string }
 function FieldShell(props: {
   id: string
   label: string
+  required?: boolean
   error?: string
   hint?: string
   children: ReactNode
 }) {
-  const { id, label, error, hint, children } = props
+  const { id, label, required, error, hint, children } = props
   return (
     <div className="flex min-w-0 flex-col gap-1">
       <label htmlFor={id} className="text-sm font-medium">
         {label}
+        {required ? (
+          <span aria-hidden className="text-danger">
+            {' '}
+            *
+          </span>
+        ) : null}
       </label>
       {children}
       {error ? (
@@ -44,7 +51,7 @@ export function FormField(props: InputHTMLAttributes<HTMLInputElement> & FieldPr
   const { label, error, hint, ...input } = props
   const id = useId()
   return (
-    <FieldShell id={id} label={label} error={error} hint={hint}>
+    <FieldShell id={id} label={label} required={input.required} error={error} hint={hint}>
       <input {...input} id={id} className="input" {...ariaFor(id, error, hint)} />
     </FieldShell>
   )
@@ -57,7 +64,7 @@ export function SelectField(
   const { label, error, hint, options, placeholder, ...select } = props
   const id = useId()
   return (
-    <FieldShell id={id} label={label} error={error} hint={hint}>
+    <FieldShell id={id} label={label} required={select.required} error={error} hint={hint}>
       <select {...select} id={id} className="input" {...ariaFor(id, error, hint)}>
         {placeholder !== undefined ? <option value="">{placeholder}</option> : null}
         {options.map((option) => (
@@ -74,7 +81,7 @@ export function TextAreaField(props: TextareaHTMLAttributes<HTMLTextAreaElement>
   const { label, error, hint, ...textarea } = props
   const id = useId()
   return (
-    <FieldShell id={id} label={label} error={error} hint={hint}>
+    <FieldShell id={id} label={label} required={textarea.required} error={error} hint={hint}>
       <textarea
         rows={3}
         {...textarea}
