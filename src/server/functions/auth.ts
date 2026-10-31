@@ -7,6 +7,7 @@ import { clock } from '~/server/clock'
 import { env } from '~/server/env'
 import { sendMail } from '~/server/mail'
 import { hashPassword, verifyPassword } from '~/server/passwords'
+import { ensureBillingScheduler } from '~/server/scheduler'
 import {
   createSession,
   destroySession,
@@ -25,7 +26,11 @@ import {
 
 const RESET_TOKEN_MS = 60 * 60 * 1000
 
-export const getCurrentUser = createServerFn({ method: 'GET' }).handler(() => getSessionUser())
+export const getCurrentUser = createServerFn({ method: 'GET' }).handler(() => {
+  // Every page asks who is signed in, so this is where the daily billing job gets started.
+  ensureBillingScheduler()
+  return getSessionUser()
+})
 
 export const signup = createServerFn({ method: 'POST' })
   .validator(signupSchema)

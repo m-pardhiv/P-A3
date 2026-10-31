@@ -47,6 +47,7 @@ import { Route as PortalInvoicesIndexRouteImport } from './routes/portal/invoice
 import { Route as PortalInvoicesIdRouteImport } from './routes/portal/invoices/$id'
 import { Route as PortalSubscriptionsIndexRouteImport } from './routes/portal/subscriptions/index'
 import { Route as PortalSubscriptionsIdRouteImport } from './routes/portal/subscriptions/$id'
+import { Route as PrintInvoiceIdRouteImport } from './routes/print/invoice/$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -239,6 +240,11 @@ const PortalSubscriptionsIdRoute = PortalSubscriptionsIdRouteImport.update({
   path: '/subscriptions/$id',
   getParentRoute: () => PortalRoute,
 } as any)
+const PrintInvoiceIdRoute = PrintInvoiceIdRouteImport.update({
+  id: '/print/invoice/$id',
+  path: '/print/invoice/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -269,6 +275,7 @@ export interface FileRoutesByFullPath {
   '/subscriptions/new': typeof AppSubscriptionsNewRoute
   '/portal/invoices/$id': typeof PortalInvoicesIdRoute
   '/portal/subscriptions/$id': typeof PortalSubscriptionsIdRoute
+  '/print/invoice/$id': typeof PrintInvoiceIdRoute
   '/customers/': typeof AppCustomersIndexRoute
   '/invoices/': typeof AppInvoicesIndexRoute
   '/plans/': typeof AppPlansIndexRoute
@@ -306,6 +313,7 @@ export interface FileRoutesByTo {
   '/subscriptions/new': typeof AppSubscriptionsNewRoute
   '/portal/invoices/$id': typeof PortalInvoicesIdRoute
   '/portal/subscriptions/$id': typeof PortalSubscriptionsIdRoute
+  '/print/invoice/$id': typeof PrintInvoiceIdRoute
   '/customers': typeof AppCustomersIndexRoute
   '/invoices': typeof AppInvoicesIndexRoute
   '/plans': typeof AppPlansIndexRoute
@@ -347,6 +355,7 @@ export interface FileRoutesById {
   '/_app/subscriptions/new': typeof AppSubscriptionsNewRoute
   '/portal/invoices/$id': typeof PortalInvoicesIdRoute
   '/portal/subscriptions/$id': typeof PortalSubscriptionsIdRoute
+  '/print/invoice/$id': typeof PrintInvoiceIdRoute
   '/_app/customers/': typeof AppCustomersIndexRoute
   '/_app/invoices/': typeof AppInvoicesIndexRoute
   '/_app/plans/': typeof AppPlansIndexRoute
@@ -387,6 +396,7 @@ export interface FileRouteTypes {
     | '/subscriptions/new'
     | '/portal/invoices/$id'
     | '/portal/subscriptions/$id'
+    | '/print/invoice/$id'
     | '/customers/'
     | '/invoices/'
     | '/plans/'
@@ -424,6 +434,7 @@ export interface FileRouteTypes {
     | '/subscriptions/new'
     | '/portal/invoices/$id'
     | '/portal/subscriptions/$id'
+    | '/print/invoice/$id'
     | '/customers'
     | '/invoices'
     | '/plans'
@@ -464,6 +475,7 @@ export interface FileRouteTypes {
     | '/_app/subscriptions/new'
     | '/portal/invoices/$id'
     | '/portal/subscriptions/$id'
+    | '/print/invoice/$id'
     | '/_app/customers/'
     | '/_app/invoices/'
     | '/_app/plans/'
@@ -482,6 +494,7 @@ export interface RootRouteChildren {
   PortalRoute: typeof PortalRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
+  PrintInvoiceIdRoute: typeof PrintInvoiceIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -752,6 +765,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalSubscriptionsIdRouteImport
       parentRoute: typeof PortalRoute
     }
+    '/print/invoice/$id': {
+      id: '/print/invoice/$id'
+      path: '/print/invoice/$id'
+      fullPath: '/print/invoice/$id'
+      preLoaderRoute: typeof PrintInvoiceIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -852,6 +872,7 @@ const rootRouteChildren: RootRouteChildren = {
   PortalRoute: PortalRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
+  PrintInvoiceIdRoute: PrintInvoiceIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

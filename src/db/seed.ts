@@ -1,13 +1,17 @@
 import bcrypt from 'bcryptjs'
 import { addMonths, format, parseISO } from 'date-fns'
 import { eq } from 'drizzle-orm'
-import { drizzle } from 'drizzle-orm/postgres-js'
+import { runBilling } from '~/server/billing-run'
 import { clock } from '~/server/clock'
+import { periodStart } from '~/server/domain/billing'
 import { addDays } from '~/server/domain/dates'
 import { type Catalogue, planLine, productLine } from '~/server/domain/subscription'
-import { createClient } from './client'
+import { recordPayment } from '~/server/payments'
+import { createDb } from './client'
 import {
   customers,
+  discounts,
+  invoices,
   paymentTerms,
   plans,
   products,
@@ -25,8 +29,20 @@ const paise = (rupees: number) => Math.round(rupees * 100)
 const today = clock.today()
 const monthsFromToday = (months: number) => format(addMonths(parseISO(today), months), 'yyyy-MM-dd')
 
-const client = createClient(1)
-const db = drizzle(client)
+/**
+ * A start date whose monthly cycle lands exactly on today, so the next billing run has work to do.
+ * On the 31st, "4 months ago" is a 30-day month, so it looks further back until the days line up.
+ */
+function monthlyStartDueToday(atLeastMonths: number) {
+  for (let months = atLeastMonths; months < atLeastMonths + 12; months++) {
+    const start = monthsFromToday(-months)
+    if (periodStart(start, 'monthly', months) === today) return start
+  }
+  return monthsFromToday(-atLeastMonths)
+}
+
+const db = createDb(1)
+const client = db.$client
 
 const reset = process.argv.includes('--reset')
 if (reset && process.env.NODE_ENV === 'production') {
@@ -49,7 +65,7 @@ if (reset) {
 
 const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 12)
 
-await db.transaction(async (tx) => {
+const { adminId, staffId } = await db.transaction(async (tx) => {
   const [admin, staff] = await tx
     .insert(users)
     .values([
@@ -219,6 +235,31 @@ await db.transaction(async (tx) => {
     { templateId: teamRollout.id, productId: training.id, quantity: 1 },
   ])
 
+  // Both start today, so the history below is untouched and the next billing run uses them.
+  await tx.insert(discounts).values([
+    {
+      name: 'Welcome 10%',
+      kind: 'percent',
+      value: 10,
+      minPurchaseAmount: paise(4000),
+      startDate: today,
+      endDate: addDays(today, 90),
+      usageLimit: 10,
+      scope: 'subscription',
+    },
+    {
+      name: 'Storage saver',
+      kind: 'fixed',
+      value: paise(100),
+      minQuantity: 2,
+      startDate: today,
+      endDate: addDays(today, 30),
+      usageLimit: 3,
+      scope: 'product',
+      productId: cloud.id,
+    },
+  ])
+
   const catalogue: Catalogue = {
     products: new Map([crm, support, cloud, training].map((p) => [p.id, p])),
     variants: new Map([odoo, support24x7, cloud1tb].map((v) => [v.id, v])),
@@ -261,7 +302,7 @@ await db.transaction(async (tx) => {
       plan: monthly,
       paymentTermId: net15.id,
       status: 'active',
-      startDate: monthsFromToday(-4),
+      startDate: monthlyStartDueToday(4),
       expiryDate: monthsFromToday(8),
       lines: [crmOdoo(3), storageLine],
     },
@@ -270,7 +311,7 @@ await db.transaction(async (tx) => {
       plan: team,
       paymentTermId: net30.id,
       status: 'active',
-      startDate: monthsFromToday(-3),
+      startDate: monthlyStartDueToday(3),
       planQuantity: 8,
       lines: [crmOdoo(8), supportLine],
       createdBy: staff.id,
@@ -435,7 +476,48 @@ await db.transaction(async (tx) => {
     .update(subscriptions)
     .set({ renewedFromId: created[0].id })
     .where(eq(subscriptions.id, created[created.length - 1].id))
+
+  return { adminId: admin.id, staffId: staff.id }
 })
+
+// Billing history. Each run bills what was due on that date. Older invoices are confirmed and
+// mostly paid, so some stay unpaid and become overdue; the newest are left as drafts.
+const methods = ['upi', 'bank_transfer', 'card', 'cash', 'cheque'] as const
+
+async function confirmAndSettle(leaveSomeDraft: boolean) {
+  const drafts = await db
+    .select()
+    .from(invoices)
+    .where(eq(invoices.status, 'draft'))
+    .orderBy(invoices.number)
+
+  for (const [i, invoice] of drafts.entries()) {
+    if (leaveSomeDraft && i % 2 === 1) continue // stays a draft
+    await db.update(invoices).set({ status: 'confirmed' }).where(eq(invoices.id, invoice.id))
+    if (leaveSomeDraft) continue // confirmed, nothing paid yet
+
+    const turn = i % 3
+    if (turn === 2) continue // confirmed and unpaid: overdue once its due date passes
+    const paidOn = addDays(invoice.issueDate, 3)
+    await recordPayment(db, {
+      invoiceId: invoice.id,
+      method: methods[i % methods.length],
+      amount: turn === 0 ? invoice.total : Math.round(invoice.total * 0.4),
+      paidOn: paidOn > today ? today : paidOn,
+      note: null,
+      recordedBy: i % 2 === 0 ? adminId : staffId,
+    })
+  }
+}
+
+for (const [daysAgo, leaveSomeDraft] of [
+  [75, false],
+  [30, false],
+  [1, true],
+] as const) {
+  await runBilling(db, { asOf: addDays(today, -daysAgo), triggeredBy: adminId })
+  await confirmAndSettle(leaveSomeDraft)
+}
 
 console.log(`
 Demo accounts (password for all: ${DEMO_PASSWORD})
@@ -443,6 +525,9 @@ Demo accounts (password for all: ${DEMO_PASSWORD})
   staff     staff@brightloop.example
   customer  asha@customer.example, vikram@customer.example, neha@customer.example,
             arjun@customer.example, priya@customer.example
+
+Billing is up to date as of yesterday. Run billing for today on the Billing page to see the
+next invoices, and the Welcome 10% and Storage saver discounts, apply.
 `)
 
 await client.end()

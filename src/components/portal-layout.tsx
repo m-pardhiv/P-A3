@@ -20,10 +20,10 @@ export function PortalLayout({ user, children }: { user: SessionUser; children: 
             </div>
           </div>
           <nav aria-label="Portal" className="flex gap-1 overflow-x-auto">
-            <Link to="/portal/subscriptions" className="portal-tab">
+            <Link to="/portal/subscriptions" search={{ page: 1 }} className="portal-tab">
               My Subscriptions
             </Link>
-            <Link to="/portal/invoices" className="portal-tab">
+            <Link to="/portal/invoices" search={{ page: 1 }} className="portal-tab">
               My Invoices
             </Link>
             <Link to="/portal/profile" className="portal-tab">

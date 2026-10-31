@@ -187,6 +187,17 @@ function SubscriptionPage() {
     ['Start date', formatDate(data.startDate)],
     ['Expiry date', formatDate(data.expiryDate)],
     ['Next invoice', formatDate(data.nextInvoiceDate)],
+    [
+      'Invoices',
+      <Link
+        key="invoices"
+        to="/invoices"
+        search={{ page: 1, subscriptionId: data.id }}
+        className="link"
+      >
+        View invoices for this subscription
+      </Link>,
+    ],
     ['Quotation valid until', formatDate(data.quotationValidUntil)],
     ['Template', data.templateName ?? 'None'],
   ]

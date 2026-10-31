@@ -31,6 +31,11 @@ import {
 import { taxOn } from '~/server/domain/tax'
 import { containsPattern, requireFound, requireUuid } from '~/server/not-found'
 import { requireRole } from '~/server/session'
+import {
+  loadSubscriptionContext as loadContext,
+  lockSubscription,
+  performSubscriptionAction,
+} from '~/server/subscription-core'
 import type { ActionResult } from '~/shared/result'
 import { idInput } from '~/shared/schemas/fields'
 import { PAGE_SIZE } from '~/shared/schemas/pagination'
@@ -40,16 +45,6 @@ import {
   subscriptionListSchema,
   updateLinesSchema,
 } from '~/shared/schemas/subscriptions'
-
-type Reader = Pick<typeof db, 'select'>
-
-/** Stops two people changing the same subscription at once. Call inside a transaction. */
-const lockSubscription = (tx: Reader, id: string) =>
-  tx
-    .select({ id: subscriptions.id })
-    .from(subscriptions)
-    .where(eq(subscriptions.id, id))
-    .for('update')
 
 export const listSubscriptions = createServerFn({ method: 'GET' })
   .validator(subscriptionListSchema)
@@ -98,33 +93,6 @@ export const listSubscriptions = createServerFn({ method: 'GET' })
     ])
     return { rows, total, page: data.page, pageSize: PAGE_SIZE }
   })
-
-async function loadContext(reader: Reader, id: string) {
-  const renewal = alias(subscriptions, 'renewal')
-  const [row] = await reader
-    .select({
-      subscription: getTableColumns(subscriptions),
-      plan: getTableColumns(plans),
-      renewalId: renewal.id,
-      renewalNumber: renewal.number,
-    })
-    .from(subscriptions)
-    .innerJoin(plans, eq(plans.id, subscriptions.planId))
-    .leftJoin(renewal, eq(renewal.renewedFromId, subscriptions.id))
-    .where(eq(subscriptions.id, id))
-  if (!row) return null
-
-  const context: SubscriptionContext = {
-    status: row.subscription.status,
-    startDate: row.subscription.startDate,
-    expiryDate: row.subscription.expiryDate,
-    quotationValidUntil: row.subscription.quotationValidUntil,
-    alreadyRenewed: row.renewalId !== null,
-    plan: row.plan,
-    today: clock.today(),
-  }
-  return { ...row, context }
-}
 
 export const getSubscription = createServerFn({ method: 'GET' })
   .validator(idInput)
@@ -260,51 +228,5 @@ export const runSubscriptionAction = createServerFn({ method: 'POST' })
   .validator(subscriptionActionSchema)
   .handler(async ({ data }): Promise<ActionResult<{ id: string }>> => {
     const user = await requireRole('admin', 'staff')
-    return db.transaction(async (tx) => {
-      await lockSubscription(tx, data.id)
-      const found = await loadContext(tx, data.id)
-      if (!found) return { ok: false, error: 'This subscription no longer exists' }
-
-      const result = transition(found.context, data.action)
-      if (!result.ok) return result
-
-      if (data.action === 'renew') {
-        const { id: _id, number: _number, createdAt: _createdAt, ...source } = found.subscription
-        const [renewal] = await tx
-          .insert(subscriptions)
-          .values({
-            ...source,
-            ...renewalDates({
-              startDate: source.startDate,
-              expiryDate: source.expiryDate as string,
-            }),
-            status: 'draft',
-            nextInvoiceDate: null,
-            quotationValidUntil: null,
-            renewedFromId: found.subscription.id,
-            createdBy: user.id,
-          })
-          .returning({ id: subscriptions.id })
-        const lines = await tx
-          .select()
-          .from(subscriptionLines)
-          .where(eq(subscriptionLines.subscriptionId, data.id))
-        await tx
-          .insert(subscriptionLines)
-          .values(
-            lines.map(({ id: _lineId, ...line }) => ({ ...line, subscriptionId: renewal.id })),
-          )
-        return { ok: true, data: { id: renewal.id } }
-      }
-
-      await tx
-        .update(subscriptions)
-        .set({
-          status: result.status,
-          ...(data.action === 'activate' ? { nextInvoiceDate: found.subscription.startDate } : {}),
-          ...(data.action === 'close' ? { nextInvoiceDate: null } : {}),
-        })
-        .where(eq(subscriptions.id, data.id))
-      return { ok: true, data: { id: data.id } }
-    })
+    return performSubscriptionAction(db, { ...data, actorId: user.id })
   })

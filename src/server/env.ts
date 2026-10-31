@@ -11,6 +11,9 @@ const schema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
   MAIL_FROM: z.string().default('Brightloop <billing@brightloop.example>'),
+  // The daily billing job. Switch it off to run billing only from the Billing page.
+  BILLING_SCHEDULER: z.enum(['on', 'off']).default('on'),
+  BILLING_HOUR: z.coerce.number().int().min(0).max(23).default(2),
 })
 
 export const env = schema.parse(process.env)

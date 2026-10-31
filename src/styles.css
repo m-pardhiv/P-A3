@@ -238,3 +238,18 @@
     animation: none;
   }
 }
+
+/* Printing: only the invoice, on white, with no controls. */
+@media print {
+  body {
+    background: white;
+  }
+
+  .no-print {
+    display: none;
+  }
+
+  @page {
+    margin: 16mm;
+  }
+}

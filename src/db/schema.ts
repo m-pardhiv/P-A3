@@ -21,6 +21,28 @@ import {
 // Every table calls enableRLS() and has no policies, so only the owning role can read or write it.
 // This is defence in depth: the app connects as the table owner and is unaffected.
 
+/** The customer details copied onto an invoice when it is billed. */
+export type CustomerSnapshot = {
+  name: string
+  company: string | null
+  email: string
+  phone: string | null
+  address: string | null
+}
+
+/** What a billing run records about itself, shown on the Billing page. */
+export type BillingRunDetails = {
+  activated: number
+  closed: number
+  subscriptions: {
+    subscriptionId: string
+    number: string
+    created: number
+    skipped: number
+    error?: string
+  }[]
+}
+
 /** Money is always integer paise. */
 const money = (name: string) => bigint(name, { mode: 'number' })
 const percent = (name: string) => numeric(name, { precision: 5, scale: 2, mode: 'number' })
@@ -354,7 +376,7 @@ export const invoices = pgTable(
       .notNull()
       .references(() => customers.id, { onDelete: 'restrict' }),
     /** Customer details as billed, so later profile edits do not rewrite old invoices. */
-    customerSnapshot: jsonb('customer_snapshot'),
+    customerSnapshot: jsonb('customer_snapshot').$type<CustomerSnapshot>(),
     periodStart: date('period_start').notNull(),
     periodEnd: date('period_end').notNull(),
     status: invoiceStatus('status').notNull().default('draft'),
@@ -459,7 +481,7 @@ export const billingRuns = pgTable(
     createdCount: integer('created_count').notNull().default(0),
     skippedCount: integer('skipped_count').notNull().default(0),
     errorCount: integer('error_count').notNull().default(0),
-    details: jsonb('details'),
+    details: jsonb('details').$type<BillingRunDetails>(),
   },
   (t) => [
     check('billing_runs_created_check', sql`${t.createdCount} >= 0`),

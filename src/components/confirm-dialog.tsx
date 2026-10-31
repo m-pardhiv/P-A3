@@ -5,6 +5,8 @@ export function ConfirmDialog(props: {
   title: string
   message: string
   confirmLabel: string
+  /** Danger for things that destroy data. Primary for ones that only move work forward. */
+  confirmTone?: 'danger' | 'primary'
   onConfirm: () => void
   onCancel: () => void
 }) {
@@ -25,9 +27,13 @@ export function ConfirmDialog(props: {
       <p className="mt-2 text-muted">{props.message}</p>
       <div className="mt-6 flex justify-end gap-2">
         <button type="button" className="btn btn-secondary" onClick={props.onCancel}>
-          Keep it
+          {props.confirmTone === 'primary' ? 'Cancel' : 'Keep it'}
         </button>
-        <button type="button" className="btn btn-danger" onClick={props.onConfirm}>
+        <button
+          type="button"
+          className={`btn ${props.confirmTone === 'primary' ? 'btn-primary' : 'btn-danger'}`}
+          onClick={props.onConfirm}
+        >
           {props.confirmLabel}
         </button>
       </div>

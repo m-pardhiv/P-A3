@@ -17,20 +17,19 @@ export const optionalText = z
   .nullish()
   .transform((value) => value || null)
 
+export const MONEY_PATTERN = /^\d{1,10}(\.\d{1,2})?$/
+
 /** Rupees as typed in a form, converted to integer paise without going through a float. */
+export const rupeesToPaise = (rupees: string) => {
+  const [whole, fraction = ''] = rupees.trim().split('.')
+  return Number(whole) * 100 + Number(fraction.padEnd(2, '0'))
+}
+
 export const moneySchema = z
   .union([z.string(), z.number()])
   .transform(String)
-  .pipe(
-    z
-      .string()
-      .trim()
-      .regex(/^\d{1,10}(\.\d{1,2})?$/, 'Enter an amount such as 1200 or 1200.50'),
-  )
-  .transform((rupees) => {
-    const [whole, fraction = ''] = rupees.split('.')
-    return Number(whole) * 100 + Number(fraction.padEnd(2, '0'))
-  })
+  .pipe(z.string().trim().regex(MONEY_PATTERN, 'Enter an amount such as 1200 or 1200.50'))
+  .transform(rupeesToPaise)
 
 export const wholeNumber = (min: number, message: string) =>
   z

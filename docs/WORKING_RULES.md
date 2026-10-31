@@ -13,6 +13,10 @@ Where the rules below conflict with this list, this list wins.
 - Email: SMTP settings come from env vars. Mailpit is an optional local tool, and anything
   deployed needs a real SMTP provider.
 - Rule 2 "Offline friendly" still holds for the database. It no longer requires Docker.
+- Rule 4 and billing: pure billing rules live in `src/server/domain/billing.ts`, and `runBilling`,
+  which needs the database, lives in `src/server/billing-run.ts`.
+- Server logic takes the database as a parameter, so tests and the seed use their own connection.
+  Tests only run against a database whose name ends in `_test`.
 
 ## Rules as given
 

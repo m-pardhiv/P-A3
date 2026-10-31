@@ -52,3 +52,22 @@ export function FilterSelect(props: {
     </select>
   )
 }
+
+export function DateFilter(props: {
+  label: string
+  value?: string
+  onChange: (value: string | undefined) => void
+}) {
+  return (
+    <label className="flex items-center gap-2 text-sm text-muted">
+      {props.label}
+      <input
+        key={props.value}
+        type="date"
+        defaultValue={props.value}
+        onChange={(event) => props.onChange(event.target.value || undefined)}
+        className="input w-auto"
+      />
+    </label>
+  )
+}

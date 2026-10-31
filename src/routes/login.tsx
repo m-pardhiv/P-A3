@@ -2,13 +2,13 @@ import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { AuthLayout } from '~/components/auth-layout'
 import { FormError, FormField } from '~/components/form-field'
 import { useZodForm } from '~/components/use-zod-form'
-import { homePathFor } from '~/lib/home-path'
+import { homeFor } from '~/lib/home-path'
 import { login } from '~/server/functions/auth'
 import { loginSchema } from '~/shared/schemas/auth'
 
 export const Route = createFileRoute('/login')({
   beforeLoad: ({ context }) => {
-    if (context.user) throw redirect({ to: homePathFor(context.user.role) })
+    if (context.user) throw redirect(homeFor(context.user.role))
   },
   component: LoginPage,
 })
@@ -18,7 +18,7 @@ function LoginPage() {
   const form = useZodForm({
     schema: loginSchema,
     submit: (input) => login({ data: input }),
-    onSuccess: ({ role }) => navigate({ to: homePathFor(role) }),
+    onSuccess: ({ role }) => navigate(homeFor(role)),
   })
 
   return (
