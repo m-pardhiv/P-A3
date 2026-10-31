@@ -142,15 +142,15 @@ Where each part of the project checklist stands, and how it was checked.
 
 ## 11. Interface
 
-| Item                                                                          | Status | Evidence                                                         |
-| ----------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------- |
-| Layout, navigation, labels, validation messages, success toasts, empty states | Done   | E2E loads every page; one layout and shared components           |
-| Required fields marked                                                        | Done   | New: an asterisk on required labels                              |
-| Loading states                                                                | Done   | A pending component on every route                               |
-| Confirm before destructive actions                                            | Done   | Close, cancel, delete all use the confirm dialog                 |
-| Search, filters, pagination                                                   | Done   | 20 per page on every table                                       |
-| Desktop and mobile                                                            | Done   | E2E: no sideways scrolling at 375 px on 16 pages                 |
-| Role-based interface                                                          | Done   | E2E: different sidebars per role; the server enforces regardless |
+| Item                                                                          | Status | Evidence                                                       |
+| ----------------------------------------------------------------------------- | ------ | -------------------------------------------------------------- |
+| Layout, navigation, labels, validation messages, success toasts, empty states | Done   | E2E loads every page; one layout and shared components         |
+| Required fields marked                                                        | Done   | New: an asterisk on required labels                            |
+| Loading states                                                                | Done   | A pending component on every route                             |
+| Confirm before destructive actions                                            | Done   | Close, cancel, delete all use the confirm dialog               |
+| Search, filters, pagination                                                   | Done   | 20 per page on every table                                     |
+| Desktop and mobile                                                            | Done   | E2E: no sideways scrolling at 375 px on 16 pages               |
+| Role-based interface                                                          | Done   | E2E: different navigation per role; the server enforces it too |
 
 ## 12. Testing
 

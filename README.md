@@ -30,9 +30,11 @@ The tests use `brightloop_test` and refuse to run against any database whose nam
 The interface follows the Brightloop design: a warm cream canvas, ember-to-raspberry brand gradient,
 Plus Jakarta Sans, a collapsible sidebar, and cards with soft shadows. Everything is defined once in
 `src/styles.css` (colours, radii, shadows) and the shared components in `src/components/ui`,
-`src/components/design` and `src/components/shell`. Customers get an overview, subscription cards
-with a timeline, paper-style invoices, payment history, plans and their account. Staff and admins
-get the console, with the dashboard as its home.
+`src/components/design` and `src/components/shell`. Customers get the look of the public home page:
+a white page, a top navigation bar, and a home with a typed headline and moving cards that hold
+their own figures. Behind it are subscription cards with a timeline, paper-style invoices, payment
+history, plans and their account. Staff and admins get the console with the sidebar, with the
+dashboard as its home.
 
 ## Demo accounts
 
@@ -43,9 +45,6 @@ The password for every account is `Brightloop@2026`.
 | Admin    | `admin@brightloop.example`                                      |
 | Staff    | `staff@brightloop.example`                                      |
 | Customer | `asha@`, `vikram@`, `neha@`, `arjun@`, `priya@customer.example` |
-
-The sign-in page offers these as one-click "Use" buttons while demonstrating. They show in
-development and are hidden when `NODE_ENV=production`, unless `SHOW_DEMO_LOGINS=true`.
 
 These passwords are public. Do not seed them into a database other people can reach, or change
 them first.

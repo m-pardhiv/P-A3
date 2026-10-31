@@ -298,7 +298,13 @@ function MobileDrawer(props: {
   )
 }
 
-function ProfileMenu({ user, account }: { user: SessionUser; account?: LinkProps['to'] }) {
+export function ProfileMenu(props: {
+  user: SessionUser
+  account?: LinkProps['to']
+  /** Show only the avatar. */
+  compact?: boolean
+}) {
+  const { user, account, compact } = props
   const signOut = useSignOut()
   return (
     <DropdownMenu>
@@ -309,15 +315,17 @@ function ProfileMenu({ user, account }: { user: SessionUser; account?: LinkProps
           aria-label={`Account menu for ${user.name}`}
         >
           <Avatar name={user.name} className="size-9 text-sm" />
-          <span className="hidden text-left leading-tight sm:block">
-            <span
-              className="block text-[11px] font-medium text-muted-foreground"
-              suppressHydrationWarning
-            >
-              {greetingForNow()},
+          {compact ? null : (
+            <span className="hidden text-left leading-tight sm:block">
+              <span
+                className="block text-[11px] font-medium text-muted-foreground"
+                suppressHydrationWarning
+              >
+                {greetingForNow()},
+              </span>
+              <span className="block text-[13px] font-bold">{user.name}</span>
             </span>
-            <span className="block text-[13px] font-bold">{user.name}</span>
-          </span>
+          )}
           <ChevronDown className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
         </button>
       </DropdownMenuTrigger>
@@ -347,20 +355,29 @@ function ProfileMenu({ user, account }: { user: SessionUser; account?: LinkProps
   )
 }
 
+export function SkipLink() {
+  return (
+    <a
+      href="#main"
+      className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[90] focus:rounded-full focus:bg-foreground focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-background"
+    >
+      Skip to content
+    </a>
+  )
+}
+
 /**
- * The frame every signed-in page sits in: a collapsible sidebar, a drawer on phones, and a top bar
- * with the account menu. Customers and staff get the same frame with different navigation.
+ * The frame for the admin and staff console: a collapsible sidebar, a drawer on phones, and a top
+ * bar with the account menu. Customers get the lighter frame in `portal-layout.tsx`.
  */
 export function AppShell(props: {
   user: SessionUser
   groups: NavGroup[]
   /** Where the logo links to. */
   home: LinkProps['to']
-  /** A "My account" entry in the profile menu, for customers. */
-  account?: LinkProps['to']
   children: ReactNode
 }) {
-  const { user, groups, home, account, children } = props
+  const { user, groups, home, children } = props
   const pathname = useRouterState({ select: (state) => state.location.pathname })
   const [collapsed, setCollapsed] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -388,12 +405,7 @@ export function AppShell(props: {
 
   return (
     <TooltipProvider>
-      <a
-        href="#main"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[90] focus:rounded-full focus:bg-foreground focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-background"
-      >
-        Skip to content
-      </a>
+      <SkipLink />
       <div className="flex min-h-screen">
         <DesktopSidebar
           user={user}
@@ -421,7 +433,7 @@ export function AppShell(props: {
                 <Menu className="size-5" />
               </button>
               <div className="ml-auto">
-                <ProfileMenu user={user} account={account} />
+                <ProfileMenu user={user} />
               </div>
             </div>
           </header>

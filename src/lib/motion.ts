@@ -13,6 +13,13 @@ export const staggerItem: Variants = {
   show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: easeOut } },
 }
 
+/** The home page's hero entrance: spread onto a `motion` element, later items with a longer delay. */
+export const rise = (delay: number) => ({
+  initial: { opacity: 0, y: 16 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.55, delay, ease: easeOut },
+})
+
 export const pageTransition = {
   initial: { opacity: 0, y: 10 },
   animate: { opacity: 1, y: 0 },

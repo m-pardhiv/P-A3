@@ -17,6 +17,8 @@ Where the rules below conflict with this list, this list wins.
   which needs the database, lives in `src/server/billing-run.ts`.
 - Server logic takes the database as a parameter, so tests and the seed use their own connection.
   Tests only run against a database whose name ends in `_test`.
+- Navigation: the customer portal uses a top navigation bar like the public home page. The grouped
+  sidebar in rule 2 applies to the admin and staff console.
 
 ## Rules as given
 

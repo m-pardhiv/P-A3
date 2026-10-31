@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, gte, inArray, ne, sql } from 'drizzle-orm'
+import { and, asc, count, desc, eq, inArray, ne, sql } from 'drizzle-orm'
 import type { Database, Executor } from '~/db/client'
 import {
   customers,
@@ -12,7 +12,6 @@ import {
 import type { ActionResult } from '~/shared/result'
 import { PAGE_SIZE } from '~/shared/schemas/pagination'
 import { clock } from './clock'
-import { lastMonths } from './domain/dates'
 import { totals } from './domain/subscription'
 import {
   allowedActions,
@@ -195,11 +194,9 @@ export async function saveProfile(
 /** Everything the customer's home page shows, worked out in the database. */
 export async function getOverview(database: Executor, customerId: string) {
   const today = clock.today()
-  const months = lastMonths(today, 6)
 
   const [counts] = await database
     .select({
-      total: count(),
       active: sql<number>`count(*) filter (where ${subscriptions.status} = 'active')::int`,
     })
     .from(subscriptions)
@@ -223,34 +220,10 @@ export async function getOverview(database: Executor, customerId: string) {
       ),
     )
 
-  const [paid] = await database
-    .select({
-      amount: sql<number>`coalesce(sum(${payments.amount}), 0)::bigint`.mapWith(Number),
-      payments: sql<number>`count(*)::int`,
-    })
-    .from(payments)
-    .innerJoin(invoices, eq(invoices.id, payments.invoiceId))
-    .where(eq(invoices.customerId, customerId))
-
-  const byMonth = await database
-    .select({
-      month: sql<string>`to_char(date_trunc('month', ${payments.paidOn}), 'YYYY-MM-01')`,
-      amount: sql<number>`sum(${payments.amount})::bigint`.mapWith(Number),
-    })
-    .from(payments)
-    .innerJoin(invoices, eq(invoices.id, payments.invoiceId))
-    .where(and(eq(invoices.customerId, customerId), gte(payments.paidOn, months[0])))
-    .groupBy(sql`date_trunc('month', ${payments.paidOn})`)
-  const monthly = months.map((month) => ({
-    month,
-    amount: byMonth.find((row) => row.month === month)?.amount ?? 0,
-  }))
-
   // The running subscription that is billed next, which is the one worth showing first.
   const [current] = await database
     .select({
       id: subscriptions.id,
-      number: subscriptions.number,
       planName: plans.name,
       billingPeriod: plans.billingPeriod,
       startDate: subscriptions.startDate,
@@ -264,11 +237,6 @@ export async function getOverview(database: Executor, customerId: string) {
         select coalesce(sum(round(${subscriptionLines.amount} * ${subscriptionLines.taxRatePercent} / 100)), 0)::bigint
         from ${subscriptionLines} where ${subscriptionLines.subscriptionId} = ${subscriptions.id}
       )`.mapWith(Number),
-      quantity: sql<number>`(
-        select coalesce(max(${subscriptionLines.quantity}), 1)::int from ${subscriptionLines}
-        where ${subscriptionLines.subscriptionId} = ${subscriptions.id}
-          and ${subscriptionLines.productId} is null
-      )`.mapWith(Number),
     })
     .from(subscriptions)
     .innerJoin(plans, eq(plans.id, subscriptions.planId))
@@ -276,48 +244,22 @@ export async function getOverview(database: Executor, customerId: string) {
     .orderBy(asc(subscriptions.nextInvoiceDate), asc(subscriptions.number))
     .limit(1)
 
-  const recentInvoices = (await listInvoices(database, { page: 1 }, { customerId })).rows
-    .slice(0, 5)
-    .map((row) => ({
-      id: row.id,
-      number: row.number,
-      issueDate: row.issueDate,
-      dueDate: row.dueDate,
-      status: row.status,
-      overdue: row.overdue,
-      total: row.total,
-    }))
-
-  const recentPayments = await database
-    .select({
-      id: payments.id,
-      paidOn: payments.paidOn,
-      amount: payments.amount,
-      method: payments.method,
-      invoiceId: invoices.id,
-      invoiceNumber: invoices.number,
-    })
+  const [lastPayment] = await database
+    .select({ amount: payments.amount, paidOn: payments.paidOn })
     .from(payments)
     .innerJoin(invoices, eq(invoices.id, payments.invoiceId))
     .where(eq(invoices.customerId, customerId))
     .orderBy(desc(payments.paidOn), desc(payments.createdAt))
-    .limit(5)
+    .limit(1)
 
   return {
     today,
     activeSubscriptions: counts.active,
-    totalSubscriptions: counts.total,
-    nextInvoiceDate: current?.nextInvoiceDate ?? null,
-    nextInvoicePlan: current?.planName ?? null,
-    totalPaid: paid.amount,
-    paymentCount: paid.payments,
     outstanding: owed.amount,
     outstandingInvoices: owed.invoices,
     overdueInvoices: owed.overdue,
     current: current ?? null,
-    paymentsByMonth: monthly,
-    recentInvoices,
-    recentPayments,
+    lastPayment: lastPayment ?? null,
   }
 }
 

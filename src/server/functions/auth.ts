@@ -91,21 +91,3 @@ export const forgotPassword = createServerFn({ method: 'POST' })
 export const resetPassword = createServerFn({ method: 'POST' })
   .validator(resetPasswordSchema)
   .handler(async ({ data }): Promise<ActionResult> => completePasswordReset(db, data))
-
-const DEMO_PASSWORD = 'Brightloop@2026'
-
-/** The sample accounts from the seed, offered on the sign-in page while demonstrating. */
-export const getDemoLogins = createServerFn({ method: 'GET' }).handler(async () => {
-  const show = env.SHOW_DEMO_LOGINS
-    ? env.SHOW_DEMO_LOGINS === 'true'
-    : process.env.NODE_ENV !== 'production'
-  if (!show) return null
-  return {
-    password: DEMO_PASSWORD,
-    accounts: [
-      { label: 'Admin', email: 'admin@brightloop.example' },
-      { label: 'Staff', email: 'staff@brightloop.example' },
-      { label: 'Customer', email: 'asha@customer.example' },
-    ],
-  }
-})

@@ -1,13 +1,13 @@
 import { Link } from '@tanstack/react-router'
-import { motion, useReducedMotion } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { ArrowRight, FileText, Layers, ShieldCheck, Wallet } from 'lucide-react'
-import { useEffect, useState } from 'react'
 import { Logo } from '~/components/shell/logo'
 import { LinkButton } from '~/components/ui/button'
-import { company } from '~/lib/company'
-import { easeOut } from '~/lib/motion'
+import { easeOut, rise } from '~/lib/motion'
 import type { SessionUser } from '~/server/session'
 import { CardMarquee } from './hero-cards'
+import { SiteFooter } from './site-footer'
+import { Typewriter } from './typewriter'
 
 const features = [
   {
@@ -27,12 +27,6 @@ const features = [
   },
 ]
 
-const rise = (delay: number) => ({
-  initial: { opacity: 0, y: 16 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.55, delay, ease: easeOut },
-})
-
 /** Headlines that take turns. Keep each short enough to sit on three lines on a phone. */
 const HEADLINES = [
   'Where customers and teams manage subscriptions with ease',
@@ -40,76 +34,6 @@ const HEADLINES = [
   'Pause, resume or close without waiting on anyone',
   'One login for customers, staff and admins',
 ]
-
-const TYPE_MS = 75
-const DELETE_MS = 36
-const HOLD_MS = 2400
-const GAP_MS = 350
-
-/**
- * Types each phrase out, holds it, backspaces it, then moves on to the next, forever.
- * Every phrase is also rendered invisibly in the same grid cell, so the heading is always as
- * tall as the tallest phrase (no layout shift at any screen width) and wrapping is stable.
- * Assistive tech reads one static headline; reduced-motion visitors see it without animation.
- */
-function Typewriter({ phrases }: { phrases: string[] }) {
-  const reduced = useReducedMotion()
-  const [index, setIndex] = useState(0)
-  const [count, setCount] = useState(0)
-  const [phase, setPhase] = useState<'typing' | 'deleting'>('typing')
-
-  const text = phrases[index]
-
-  useEffect(() => {
-    if (reduced) return
-    let delay: number
-    let next: () => void
-
-    if (phase === 'typing') {
-      if (count < text.length) {
-        delay = count === 0 && index === 0 ? 500 : TYPE_MS
-        next = () => setCount((n) => n + 1)
-      } else {
-        delay = HOLD_MS
-        next = () => setPhase('deleting')
-      }
-    } else if (count > 0) {
-      delay = DELETE_MS
-      next = () => setCount((n) => n - 1)
-    } else {
-      delay = GAP_MS
-      next = () => {
-        setIndex((i) => (i + 1) % phrases.length)
-        setPhase('typing')
-      }
-    }
-
-    const id = window.setTimeout(next, delay)
-    return () => window.clearTimeout(id)
-  }, [reduced, phase, count, index, text.length, phrases.length])
-
-  return (
-    <>
-      <span className="sr-only">{phrases[0]}</span>
-      <span aria-hidden className="grid">
-        {phrases.map((p) => (
-          <span key={p} className="invisible col-start-1 row-start-1">
-            {p}
-          </span>
-        ))}
-        <span className="col-start-1 row-start-1">
-          {reduced ? phrases[0] : text.slice(0, count)}
-          {!reduced && (
-            <span className="relative inline-block w-0 align-baseline">
-              <span className="absolute -bottom-[0.08em] left-[0.04em] h-[0.92em] w-[0.07em] animate-blink rounded-full bg-brand-raspberry" />
-            </span>
-          )}
-          <span className="invisible">{reduced ? '' : text.slice(count)}</span>
-        </span>
-      </span>
-    </>
-  )
-}
 
 export function LandingPage({ user }: { user: SessionUser | null }) {
   return (
@@ -245,22 +169,7 @@ export function LandingPage({ user }: { user: SessionUser | null }) {
         </div>
       </section>
 
-      <footer id="contact" className="mx-auto max-w-6xl px-5 pb-10 sm:px-8">
-        <div className="flex flex-col gap-4 border-t border-border pt-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <p>
-            © {new Date().getFullYear()} {company.name}
-          </p>
-          <p>
-            Need help?{' '}
-            <a
-              href={`mailto:${company.supportEmail}`}
-              className="font-semibold text-foreground hover:text-brand-ink"
-            >
-              {company.supportEmail}
-            </a>
-          </p>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   )
 }

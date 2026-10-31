@@ -411,14 +411,19 @@ async function visitAll(page, paths, label) {
   const cust = await login(browser, 'asha@customer.example')
   const c = cust.page
   await c.waitForSelector('nav[aria-label=Main]')
-  const cNav = await bodyText(c)
+  const cNav = await c.locator('nav[aria-label=Main]').innerText()
   check('customer lands in portal', c.url().includes('/portal'), c.url())
   check(
     'customer sees portal nav',
-    ['Overview', 'My Subscriptions', 'Invoices', 'Payment History', 'Plans', 'My Account'].every(
-      (i) => cNav.includes(i),
-    ),
+    ['Home', 'Subscriptions', 'Invoices', 'Payments', 'Plans'].every((i) => cNav.includes(i)),
+    cNav,
   )
+  await c.click('button[aria-label^="Account menu"]')
+  check(
+    'customer reaches My account from the profile menu',
+    await c.locator('[role=menuitem]:has-text("My account")').isVisible(),
+  )
+  await c.keyboard.press('Escape')
   await visitAll(
     c,
     [
@@ -726,29 +731,39 @@ async function visitAll(page, paths, label) {
     landingText.slice(0, 120),
   )
 
-  // The demo accounts on the sign-in page fill the form, and signing in lands on the right home.
+  // The sign-in page keeps the password to itself, and signing in lands on the right home.
   const demo = await (await browser.newContext()).newPage()
   await demo.goto(BASE + '/login', { waitUntil: 'networkidle' })
-  await demo.locator('li:has-text("Customer") button:has-text("Use")').click()
   check(
-    'demo account button fills the form',
-    (await demo.inputValue('input[name=email]')) === 'asha@customer.example',
+    'sign-in page shows no demo accounts',
+    !/Demo accounts|Brightloop@2026/.test(await demo.content()),
   )
+  await demo.fill('input[name=email]', 'asha@customer.example')
+  await demo.fill('input[name=password]', PW)
   await demo.click('button[type=submit]')
   await demo.waitForURL(/\/portal/, { timeout: 15000 })
-  await demo.waitForSelector('text=Quick actions')
+  await demo.waitForSelector('text=Last payment')
   const home = await bodyText(demo)
   check(
-    'customer home shows the overview cards',
-    /Active subscriptions/.test(home) &&
-      /Outstanding amount/.test(home) &&
-      /Recent invoices/.test(home),
+    'customer home greets them and shows their cards',
+    /Asha/.test(home) &&
+      /To pay/.test(home) &&
+      /Last payment/.test(home) &&
+      /next bill|No bill scheduled/.test(home),
     home.slice(0, 200),
   )
   check(
-    'customer home shows payments chart and current subscription',
-    /Payments received/.test(home) && /current subscription|no active subscription/i.test(home),
+    'customer home shows their subscription or the way to one',
+    /per (day|week|month|year), with tax|No active subscription/.test(home),
+    home.slice(0, 200),
   )
+  check(
+    'customer home moves like the public home page',
+    (await demo.locator('button[aria-label="Pause card slideshow"]').count()) === 1,
+  )
+  await demo.click('button[aria-label="Pause card slideshow"]')
+  await demo.click('a:has-text("To pay") >> nth=0', { force: true })
+  await demo.waitForURL(/\/portal\/invoices/)
 
   // Subscription cards, tabs and detail with timeline.
   await demo.goto(BASE + '/portal/subscriptions', { waitUntil: 'networkidle' })
@@ -808,6 +823,10 @@ async function visitAll(page, paths, label) {
     )
     check(`375px customer page ${path} has no sideways scroll`, over <= 1, `overflow ${over}px`)
   }
+  await pp.click('button[aria-label="Open navigation menu"]')
+  await pp.click('[role=menuitem]:has-text("Invoices")')
+  await pp.waitForURL(/\/portal\/invoices/)
+  check('phone navigation menu opens a portal page', true)
   for (const path of ['/', '/login']) {
     await pp.context().clearCookies()
     await pp.goto(BASE + path, { waitUntil: 'networkidle' })

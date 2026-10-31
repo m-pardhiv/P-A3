@@ -16,10 +16,10 @@ import { cn } from '~/lib/utils'
 
 /** Decorative, static previews of what customers find inside the portal. Not real data. */
 
-const base =
+export const base =
   'flex h-full w-full flex-col justify-between overflow-hidden rounded-[1.1rem] p-3 text-left sm:rounded-[1.4rem] sm:p-4'
 
-function Pill({ children, className }: { children: React.ReactNode; className?: string }) {
+export function Pill({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <span
       className={cn(
@@ -151,7 +151,9 @@ export function WorkflowCard() {
   )
 }
 
-const cards: { key: string; node: React.ReactNode }[] = [
+export type MarqueeCard = { key: string; node: React.ReactNode }
+
+const cards: MarqueeCard[] = [
   { key: 'analytics', node: <AnalyticsCard /> },
   { key: 'invoice', node: <InvoiceCard /> },
   { key: 'studio', node: <StudioCard /> },
@@ -175,8 +177,9 @@ function cardWidthFor(stageWidth: number) {
  * dropping towards the edges. Each frame positions every card from its distance to the centre, so
  * cards rise onto the arc from the right, peak in the middle, and sink away to the left.
  * Pauses on hover and via the toggle; stays still (but arced) when reduced motion is requested.
+ * Shows the decorative previews unless given `items`, such as a customer's own cards.
  */
-export function CardMarquee() {
+export function CardMarquee({ items = cards }: { items?: MarqueeCard[] }) {
   const reduced = useReducedMotion()
   const stageRef = useRef<HTMLDivElement>(null)
   const itemRefs = useRef<(HTMLDivElement | null)[]>([])
@@ -198,7 +201,7 @@ export function CardMarquee() {
   const cardH = Math.round(cardW * 1.36)
   const spacing = cardW * 0.84
   // Enough cards that the wrap-around always happens off-screen.
-  const count = width ? Math.max(cards.length, Math.ceil((width + cardW * 2.5) / spacing)) : 0
+  const count = width ? Math.max(items.length, Math.ceil((width + cardW * 2.5) / spacing)) : 0
   const total = count * spacing
   const drop = cardW * 0.5
   const stageHeight = cardH + drop + 56
@@ -265,7 +268,7 @@ export function CardMarquee() {
             style={{ left: '50%', width: cardW, height: cardH, marginLeft: -cardW / 2 }}
           >
             <div className="size-full rounded-[1.1rem] shadow-[0_18px_40px_-16px_rgba(24,20,16,0.4)] ring-1 ring-black/5 transition-transform duration-300 hover:-translate-y-3 sm:rounded-[1.4rem]">
-              {cards[i % cards.length].node}
+              {items[i % items.length].node}
             </div>
           </div>
         ))}
