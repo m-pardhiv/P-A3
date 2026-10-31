@@ -27,27 +27,27 @@ export function InvoiceLines({ lines }: { lines: Line[] }) {
     <div className="overflow-x-auto">
       <table className="w-full border-collapse text-left">
         <thead>
-          <tr className="border-b border-line text-sm text-muted">
-            <th scope="col" className="py-2 pr-4 font-medium">
+          <tr className="border-b border-border/70 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <th scope="col" className="py-2 pr-4 font-bold">
               Description
             </th>
-            <th scope="col" className="px-4 py-2 text-right font-medium">
+            <th scope="col" className="px-4 py-2 text-right font-bold">
               Quantity
             </th>
-            <th scope="col" className="px-4 py-2 text-right font-medium">
+            <th scope="col" className="px-4 py-2 text-right font-bold">
               Unit price
             </th>
-            <th scope="col" className="px-4 py-2 text-right font-medium">
+            <th scope="col" className="px-4 py-2 text-right font-bold">
               Tax
             </th>
-            <th scope="col" className="py-2 pl-4 text-right font-medium">
+            <th scope="col" className="py-2 pl-4 text-right font-bold">
               Amount
             </th>
           </tr>
         </thead>
         <tbody className="tabular">
           {lines.map((line) => (
-            <tr key={line.id} className="border-b border-line last:border-0">
+            <tr key={line.id} className="border-b border-border/60 last:border-0">
               <td className="py-2 pr-4">{line.description}</td>
               <td className="px-4 py-2 text-right">{line.quantity}</td>
               <td className="px-4 py-2 text-right">{formatMoney(line.unitPrice)}</td>
@@ -83,36 +83,36 @@ export function PaymentsTable({
   showNotes?: boolean
 }) {
   if (payments.length === 0)
-    return <p className="text-muted">No payments have been recorded yet.</p>
+    return <p className="text-muted-foreground">No payments have been recorded yet.</p>
   return (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse text-left">
         <thead>
-          <tr className="border-b border-line text-sm text-muted">
-            <th scope="col" className="py-2 pr-4 font-medium">
+          <tr className="border-b border-border/70 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <th scope="col" className="py-2 pr-4 font-bold">
               Date
             </th>
-            <th scope="col" className="px-4 py-2 font-medium">
+            <th scope="col" className="px-4 py-2 font-bold">
               Method
             </th>
             {showNotes ? (
-              <th scope="col" className="px-4 py-2 font-medium">
+              <th scope="col" className="px-4 py-2 font-bold">
                 Recorded by
               </th>
             ) : null}
             {showNotes ? (
-              <th scope="col" className="px-4 py-2 font-medium">
+              <th scope="col" className="px-4 py-2 font-bold">
                 Note
               </th>
             ) : null}
-            <th scope="col" className="py-2 pl-4 text-right font-medium">
+            <th scope="col" className="py-2 pl-4 text-right font-bold">
               Amount
             </th>
           </tr>
         </thead>
         <tbody className="tabular">
           {payments.map((payment) => (
-            <tr key={payment.id} className="border-b border-line last:border-0">
+            <tr key={payment.id} className="border-b border-border/60 last:border-0">
               <td className="py-2 pr-4 whitespace-nowrap">{formatDate(payment.paidOn)}</td>
               <td className="px-4 py-2">{humanize(payment.method)}</td>
               {showNotes ? <td className="px-4 py-2">{payment.recordedByName}</td> : null}
@@ -131,7 +131,7 @@ export function Facts({ items }: { items: [string, React.ReactNode][] }) {
     <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
       {items.map(([label, value]) => (
         <div key={label}>
-          <dt className="text-sm text-muted">{label}</dt>
+          <dt className="text-sm text-muted-foreground">{label}</dt>
           <dd>{value}</dd>
         </div>
       ))}

@@ -71,7 +71,7 @@ async function visitAll(page, paths, label) {
     'Discounts',
     'Taxes',
     'Payment Terms',
-    'Staff',
+    'Team',
   ])
     check(`admin sidebar has ${item}`, navText.includes(item), navText.replace(/\n/g, '|'))
   await visitAll(
@@ -262,7 +262,7 @@ async function visitAll(page, paths, label) {
   const sNav = await s.locator('nav[aria-label=Main]').innerText()
   check(
     'staff sidebar hides admin-only items',
-    !/Discounts|Taxes|Payment Terms|Staff/.test(sNav),
+    !/Discounts|Taxes|Payment Terms|Team/.test(sNav),
     sNav.replace(/\n/g, '|'),
   )
   check(
@@ -410,14 +410,27 @@ async function visitAll(page, paths, label) {
   // ---------- CUSTOMER ----------
   const cust = await login(browser, 'asha@customer.example')
   const c = cust.page
-  await c.waitForSelector('nav[aria-label=Portal]')
+  await c.waitForSelector('nav[aria-label=Main]')
   const cNav = await bodyText(c)
   check('customer lands in portal', c.url().includes('/portal'), c.url())
   check(
     'customer sees portal nav',
-    ['My Subscriptions', 'My Invoices', 'Plans', 'Profile'].every((i) => cNav.includes(i)),
+    ['Overview', 'My Subscriptions', 'Invoices', 'Payment History', 'Plans', 'My Account'].every(
+      (i) => cNav.includes(i),
+    ),
   )
-  await visitAll(c, ['/portal/subscriptions', '/portal/invoices', '/portal/profile'], 'customer')
+  await visitAll(
+    c,
+    [
+      '/portal',
+      '/portal/subscriptions',
+      '/portal/invoices',
+      '/portal/payments',
+      '/portal/plans',
+      '/portal/profile',
+    ],
+    'customer',
+  )
   await c.goto(BASE + '/dashboard', { waitUntil: 'networkidle' })
   check('customer redirected from /dashboard', c.url().includes('/portal'), c.url())
   const mine = psql(
@@ -437,7 +450,7 @@ async function visitAll(page, paths, label) {
   await c.goto(`${BASE}/print/invoice/${theirs}`, { waitUntil: 'networkidle' })
   check('customer A gets 404 on B invoice (print)', /not found/i.test(await bodyText(c)))
   await c.goto(BASE + '/portal/subscriptions', { waitUntil: 'networkidle' })
-  const rowsCount = await c.locator('tbody tr').count()
+  const rowsCount = await c.locator('a[aria-label*="View details"]').count()
   const expectSubs = Number(
     psql(
       "select count(*) from subscriptions s join customers cu on cu.id=s.customer_id where cu.email='asha@customer.example' and s.status<>'draft'",
@@ -576,7 +589,7 @@ async function visitAll(page, paths, label) {
     )
     check(`375px no horizontal page scroll ${p.slice(0, 30)}`, over <= 1, `overflow ${over}px`)
   }
-  const burger = await mp.locator('button[aria-label="Open navigation"]').count()
+  const burger = await mp.locator('button[aria-label="Open navigation menu"]').count()
   check('mobile has drawer menu button', burger > 0)
 
   // ---------- server-side role enforcement (raw) ----------
@@ -644,7 +657,7 @@ async function visitAll(page, paths, label) {
       '1',
   )
   await a.goto(BASE + '/dashboard', { waitUntil: 'networkidle' })
-  check('dashboard overdue table shows reminders sent', /Reminders sent/.test(await bodyText(a)))
+  check('dashboard overdue table shows reminders sent', /reminders sent/i.test(await bodyText(a)))
   const notOverdue = psql("select id from invoices where status='paid' limit 1")
   await a.goto(`${BASE}/invoices/${notOverdue}`, { waitUntil: 'networkidle' })
   check(
@@ -702,6 +715,112 @@ async function visitAll(page, paths, label) {
   const plansText = await bodyText(plansPage.page)
   check('customer sees available plans', /Monthly standard/.test(plansText))
   check('customer does not see an ended plan', !/Launch offer/.test(plansText))
+
+  // ---------- ADDED CHECKS: the redesigned screens ----------
+  const landing = await (await browser.newContext()).newPage()
+  await landing.goto(BASE + '/', { waitUntil: 'networkidle' })
+  const landingText = await bodyText(landing)
+  check(
+    'landing page is public',
+    /Brightloop/.test(landingText) && /Log in/.test(landingText) && /Features/.test(landingText),
+    landingText.slice(0, 120),
+  )
+
+  // The demo accounts on the sign-in page fill the form, and signing in lands on the right home.
+  const demo = await (await browser.newContext()).newPage()
+  await demo.goto(BASE + '/login', { waitUntil: 'networkidle' })
+  await demo.locator('li:has-text("Customer") button:has-text("Use")').click()
+  check(
+    'demo account button fills the form',
+    (await demo.inputValue('input[name=email]')) === 'asha@customer.example',
+  )
+  await demo.click('button[type=submit]')
+  await demo.waitForURL(/\/portal/, { timeout: 15000 })
+  await demo.waitForSelector('text=Quick actions')
+  const home = await bodyText(demo)
+  check(
+    'customer home shows the overview cards',
+    /Active subscriptions/.test(home) &&
+      /Outstanding amount/.test(home) &&
+      /Recent invoices/.test(home),
+    home.slice(0, 200),
+  )
+  check(
+    'customer home shows payments chart and current subscription',
+    /Payments received/.test(home) && /current subscription|no active subscription/i.test(home),
+  )
+
+  // Subscription cards, tabs and detail with timeline.
+  await demo.goto(BASE + '/portal/subscriptions', { waitUntil: 'networkidle' })
+  check('subscription tabs show counts', (await demo.locator('button[aria-pressed]').count()) >= 5)
+  await demo.click('button[aria-pressed]:has-text("Active")')
+  await demo.waitForSelector('button[aria-pressed=true]:has-text("Active")')
+  await demo.waitForLoadState('networkidle')
+  await demo.waitForTimeout(1200)
+  check(
+    'Active tab narrows the list',
+    (await demo.locator('a[aria-label*=", active. "]').count()) >= 1 &&
+      (await demo.locator('a[aria-label*=", confirmed. "]').count()) === 0,
+  )
+  await demo.locator('a[aria-label*="View details"]').first().click()
+  await demo.waitForURL(/\/portal\/subscriptions\/[0-9a-f-]{36}/)
+  await demo.waitForSelector('text=Subscription information')
+  const detail = await bodyText(demo)
+  check(
+    'subscription detail shows information, pricing and timeline',
+    /subscription information/i.test(detail) && /pricing/i.test(detail) && /timeline/i.test(detail),
+    detail.slice(0, 150),
+  )
+
+  // Customer payment history and invoice paper.
+  await demo.goto(BASE + '/portal/payments', { waitUntil: 'networkidle' })
+  check('customer payment history lists their payments', /Total paid/.test(await bodyText(demo)))
+  await demo.goto(BASE + '/portal/invoices', { waitUntil: 'networkidle' })
+  await demo.locator('tbody a').first().click()
+  await demo.waitForURL(/\/portal\/invoices\/[0-9a-f-]{36}/)
+  await demo.waitForSelector('text=Payment status')
+  const paper = await bodyText(demo)
+  check(
+    'invoice detail shows payment status and billed to',
+    /payment status/i.test(paper) && /billed to/i.test(paper),
+    paper.slice(0, 150),
+  )
+
+  // Customer pages at phone width.
+  const phone = await browser.newContext({ viewport: { width: 375, height: 800 } })
+  const pp = await phone.newPage()
+  await pp.goto(BASE + '/login', { waitUntil: 'networkidle' })
+  await pp.fill('input[name=email]', 'asha@customer.example')
+  await pp.fill('input[name=password]', PW)
+  await pp.click('button[type=submit]')
+  await pp.waitForURL(/\/portal/)
+  for (const path of [
+    '/portal',
+    '/portal/subscriptions',
+    '/portal/invoices',
+    '/portal/payments',
+    '/portal/plans',
+    '/portal/profile',
+  ]) {
+    await pp.goto(BASE + path, { waitUntil: 'networkidle' })
+    const over = await pp.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    )
+    check(`375px customer page ${path} has no sideways scroll`, over <= 1, `overflow ${over}px`)
+  }
+  for (const path of ['/', '/login']) {
+    await pp.context().clearCookies()
+    await pp.goto(BASE + path, { waitUntil: 'networkidle' })
+    const over = await pp.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    )
+    check(`375px public page ${path} has no sideways scroll`, over <= 1, `overflow ${over}px`)
+  }
+
+  // Dashboard in the new design.
+  await a.goto(BASE + '/dashboard', { waitUntil: 'networkidle' })
+  const board = await bodyText(a)
+  check('dashboard shows the monthly revenue chart', /Revenue by month/.test(board))
 
   const errs = [...admin.errors, ...staff.errors, ...cust.errors]
   check('no uncaught page errors in browser', errs.length === 0, errs.slice(0, 3).join(' | '))

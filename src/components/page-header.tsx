@@ -11,28 +11,34 @@ export function PageHeader(props: {
   actions?: ReactNode
 }) {
   return (
-    <header className="mb-6">
+    <header className="mb-6 sm:mb-8">
       {props.breadcrumbs?.length ? (
-        <nav aria-label="Breadcrumb" className="mb-2">
-          <ol className="flex flex-wrap items-center gap-1 text-sm text-muted">
+        <nav aria-label="Breadcrumb" className="mb-1.5">
+          <ol className="flex flex-wrap items-center gap-1 text-xs font-medium text-muted-foreground">
             {props.breadcrumbs.map((crumb) => (
               <li key={crumb.label} className="flex items-center gap-1">
-                <Link to={crumb.to} className="hover:text-ink hover:underline">
+                <Link to={crumb.to} className="transition-colors hover:text-foreground">
                   {crumb.label}
                 </Link>
-                <ChevronRight size={14} aria-hidden />
+                <ChevronRight className="size-3 opacity-60" aria-hidden />
               </li>
             ))}
-            <li aria-current="page" className="text-text">
+            <li aria-current="page" className="text-foreground/70">
               {props.title}
             </li>
           </ol>
         </nav>
       ) : null}
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-3xl font-semibold text-ink">{props.title}</h1>
-          {props.description ? <p className="mt-1 text-muted">{props.description}</p> : null}
+        <div className="min-w-0">
+          <h1 className="text-[1.75rem] font-extrabold leading-tight tracking-tight sm:text-3xl">
+            {props.title}
+          </h1>
+          {props.description ? (
+            <p className="mt-1.5 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
+              {props.description}
+            </p>
+          ) : null}
         </div>
         {props.actions}
       </div>

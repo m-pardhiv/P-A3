@@ -39,7 +39,7 @@ export function QuotationDocument(props: {
       <header className="mb-8 flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="font-display text-2xl font-semibold text-ink">Brightloop Software</p>
-          <p className="text-muted">Quotation</p>
+          <p className="text-muted-foreground">Quotation</p>
         </div>
         <div className="text-right">
           <h1 className="text-3xl font-semibold text-ink">{quotation.number}</h1>
@@ -49,7 +49,7 @@ export function QuotationDocument(props: {
 
       <section className="mb-8 grid gap-6 sm:grid-cols-2">
         <div>
-          <h2 className="mb-1 text-sm font-medium text-muted">Prepared for</h2>
+          <h2 className="mb-1 text-sm font-medium text-muted-foreground">Prepared for</h2>
           <p className="font-medium">{quotation.customerName}</p>
           {quotation.customerCompany ? <p>{quotation.customerCompany}</p> : null}
           <p>{quotation.customerEmail}</p>
@@ -72,7 +72,7 @@ export function QuotationDocument(props: {
       <InvoiceLines lines={props.lines} />
       <Totals subtotal={props.totals.subtotal} tax={props.totals.tax} total={props.totals.total} />
 
-      <p className="mt-10 text-sm text-muted">
+      <p className="mt-10 text-sm text-muted-foreground">
         Amounts are charged each billing period, in Indian rupees, and exclude tax unless a tax
         amount is shown.
       </p>

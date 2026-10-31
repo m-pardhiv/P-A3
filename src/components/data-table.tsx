@@ -22,16 +22,16 @@ export function DataTable<T>(props: {
   const lastRow = Math.min(data.page * data.pageSize, data.total)
 
   return (
-    <div className="rounded-panel border border-line bg-surface">
+    <div className="overflow-hidden rounded-card border border-border/80 bg-card shadow-soft">
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-left">
           <thead>
-            <tr className="border-b border-line text-sm text-muted">
+            <tr className="border-b border-border/70 text-xs font-bold uppercase tracking-wider text-muted-foreground">
               {columns.map((column) => (
                 <th
                   key={column.header}
                   scope="col"
-                  className={`px-4 py-3 font-medium ${column.align === 'right' ? 'text-right' : ''}`}
+                  className={`px-4 py-3.5 font-bold whitespace-nowrap first:pl-5 last:pr-5 ${column.align === 'right' ? 'text-right' : ''}`}
                 >
                   {column.header}
                 </th>
@@ -40,11 +40,14 @@ export function DataTable<T>(props: {
           </thead>
           <tbody className="tabular">
             {data.rows.map((row) => (
-              <tr key={rowKey(row)} className="border-b border-line last:border-0">
+              <tr
+                key={rowKey(row)}
+                className="border-b border-border/60 transition-colors last:border-0 hover:bg-accent/30"
+              >
                 {columns.map((column) => (
                   <td
                     key={column.header}
-                    className={`px-4 py-3 ${column.align === 'right' ? 'text-right' : ''}`}
+                    className={`px-4 py-3.5 text-sm first:pl-5 last:pr-5 ${column.align === 'right' ? 'text-right' : ''}`}
                   >
                     {column.cell(row)}
                   </td>
@@ -54,7 +57,7 @@ export function DataTable<T>(props: {
           </tbody>
         </table>
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line px-4 py-3 text-sm text-muted">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/70 px-5 py-3 text-[13px] text-muted-foreground">
         <span className="tabular">
           {firstRow} to {lastRow} of {data.total}
         </span>

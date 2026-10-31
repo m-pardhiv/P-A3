@@ -57,7 +57,7 @@ export function InvoiceDocument(props: {
       <header className="mb-8 flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="font-display text-2xl font-semibold text-ink">Brightloop Software</p>
-          <p className="text-muted">Subscription invoice</p>
+          <p className="text-muted-foreground">Subscription invoice</p>
         </div>
         <div className="text-right">
           <h1 className="text-3xl font-semibold text-ink">{invoice.number}</h1>
@@ -67,7 +67,7 @@ export function InvoiceDocument(props: {
 
       <section className="mb-8 grid gap-6 sm:grid-cols-2">
         <div>
-          <h2 className="mb-1 text-sm font-medium text-muted">Billed to</h2>
+          <h2 className="mb-1 text-sm font-medium text-muted-foreground">Billed to</h2>
           <p className="font-medium">{billTo.name}</p>
           {billTo.company ? <p>{billTo.company}</p> : null}
           <p>{billTo.email}</p>
@@ -97,7 +97,7 @@ export function InvoiceDocument(props: {
         </section>
       ) : null}
 
-      <p className="mt-10 text-sm text-muted">
+      <p className="mt-10 text-sm text-muted-foreground">
         Prices are in Indian rupees and exclude tax unless a tax amount is shown.
       </p>
     </div>

@@ -79,7 +79,7 @@ function BillingPage() {
 
       <section className="panel mb-6">
         <h2 className="mb-1 text-xl font-semibold">Run billing now</h2>
-        <p className="mb-4 text-sm text-muted">
+        <p className="mb-4 text-sm text-muted-foreground">
           Running it again for the same date creates nothing new, so it is safe to press twice.
         </p>
         <form onSubmit={submit} method="post" noValidate className="flex flex-wrap items-end gap-3">
@@ -105,7 +105,7 @@ function BillingPage() {
               Billed up to {formatDate(result.asOf)}: {plural(result.created, 'invoice')} created,{' '}
               {result.skipped} skipped, {plural(result.errors, 'error')}.
             </p>
-            <p className="text-sm text-muted">
+            <p className="text-sm text-muted-foreground">
               {plural(result.activated, 'subscription')} activated and{' '}
               {plural(result.closed, 'subscription')} closed.
             </p>

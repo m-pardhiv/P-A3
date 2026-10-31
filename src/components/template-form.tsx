@@ -92,7 +92,7 @@ export function TemplateForm({ template, options }: { template?: Template; optio
 
       <section className="panel">
         <h2 className="mb-1 text-xl font-semibold">Product lines</h2>
-        <p className="mb-4 text-sm text-muted">Added on top of the plan's base fee.</p>
+        <p className="mb-4 text-sm text-muted-foreground">Added on top of the plan's base fee.</p>
         <LineEditor
           lines={lines}
           products={options.products}

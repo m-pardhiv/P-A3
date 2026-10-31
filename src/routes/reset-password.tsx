@@ -65,7 +65,11 @@ function ResetPasswordPage() {
           autoComplete="new-password"
           error={form.fieldErrors.confirmPassword}
         />
-        <button type="submit" className="btn btn-primary" disabled={form.pending}>
+        <button
+          type="submit"
+          className="btn btn-primary mt-1 min-h-12 w-full text-[15px]"
+          disabled={form.pending}
+        >
           {form.pending ? 'Changing password' : 'Change password'}
         </button>
       </form>

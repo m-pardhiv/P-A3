@@ -26,7 +26,7 @@ export function StatusTimeline({ status }: { status: string }) {
                   ? 'bg-ink font-semibold text-white ring-2 ring-marigold'
                   : done
                     ? 'bg-neutral-soft text-ink'
-                    : 'text-muted'
+                    : 'text-muted-foreground'
               }`}
             >
               {done || finished ? <Check size={14} aria-hidden /> : null}

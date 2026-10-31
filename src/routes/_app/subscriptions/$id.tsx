@@ -285,7 +285,7 @@ function SubscriptionPage() {
           <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
             {facts.map(([label, value]) => (
               <div key={label}>
-                <dt className="text-sm text-muted">{label}</dt>
+                <dt className="text-sm text-muted-foreground">{label}</dt>
                 <dd>{value}</dd>
               </div>
             ))}
@@ -309,7 +309,7 @@ function SubscriptionPage() {
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-left">
                   <thead>
-                    <tr className="border-b border-line text-sm text-muted">
+                    <tr className="border-b border-line text-sm text-muted-foreground">
                       <th scope="col" className="py-2 pr-4 font-medium">
                         Product
                       </th>
@@ -366,9 +366,11 @@ function SubscriptionPage() {
                     : event.fromStatus === null
                       ? ` as ${capitalize(event.toStatus)}`
                       : ''}
-                  <span className="text-muted"> by {event.actorName ?? 'billing'}</span>
+                  <span className="text-muted-foreground"> by {event.actorName ?? 'billing'}</span>
                 </span>
-                <span className="text-sm text-muted">{formatDateTime(event.createdAt)}</span>
+                <span className="text-sm text-muted-foreground">
+                  {formatDateTime(event.createdAt)}
+                </span>
               </li>
             ))}
           </ol>

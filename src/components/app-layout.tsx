@@ -1,32 +1,23 @@
-import { useQueryClient } from '@tanstack/react-query'
-import { Link, type LinkProps, useRouter } from '@tanstack/react-router'
 import {
   BadgePercent,
   CalendarClock,
   CircleDollarSign,
   FileText,
   LayoutDashboard,
-  type LucideIcon,
-  Menu,
   Package,
   Percent,
   Play,
   ReceiptText,
   Repeat,
-  ScrollText,
   Tags,
   UserCog,
   Users,
-  X,
 } from 'lucide-react'
-import { type ReactNode, useState } from 'react'
-import { logout } from '~/server/functions/auth'
+import type { ReactNode } from 'react'
 import type { SessionUser } from '~/server/session'
+import { AppShell, type NavGroup } from './shell/shell'
 
-type NavItem = { label: string; to: LinkProps['to']; icon: LucideIcon }
-type NavGroup = { label: string; items: NavItem[]; adminOnly?: boolean }
-
-const navGroups: NavGroup[] = [
+const groups: (NavGroup & { adminOnly?: boolean })[] = [
   {
     label: 'Overview',
     items: [{ label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard }],
@@ -56,111 +47,17 @@ const navGroups: NavGroup[] = [
       { label: 'Discounts', to: '/discounts', icon: BadgePercent },
       { label: 'Taxes', to: '/taxes', icon: Percent },
       { label: 'Payment Terms', to: '/payment-terms', icon: CalendarClock },
-      { label: 'Staff', to: '/staff', icon: UserCog },
+      { label: 'Team', to: '/staff', icon: UserCog },
     ],
   },
 ]
 
-export function useSignOut() {
-  const router = useRouter()
-  const queryClient = useQueryClient()
-  return async () => {
-    await logout()
-    queryClient.clear()
-    await router.navigate({ to: '/login' })
-  }
-}
-
-export function BrandMark() {
-  return (
-    <span className="flex items-center gap-2 font-display text-xl font-semibold text-white">
-      <ScrollText size={20} className="text-marigold" aria-hidden />
-      Brightloop
-    </span>
-  )
-}
-
+/** The admin and staff console. Staff do not see the administration group. */
 export function AppLayout({ user, children }: { user: SessionUser; children: ReactNode }) {
-  const [drawerOpen, setDrawerOpen] = useState(false)
-  const signOut = useSignOut()
-
-  const groups = navGroups.filter((group) => !group.adminOnly || user.role === 'admin')
-
+  const visible = groups.filter((group) => !group.adminOnly || user.role === 'admin')
   return (
-    <div className="min-h-dvh lg:flex">
-      <div className="sticky top-0 z-20 flex items-center justify-between bg-ink px-4 py-3 lg:hidden">
-        <BrandMark />
-        <button
-          type="button"
-          className="text-white"
-          aria-label="Open navigation"
-          aria-expanded={drawerOpen}
-          onClick={() => setDrawerOpen(true)}
-        >
-          <Menu aria-hidden />
-        </button>
-      </div>
-
-      {drawerOpen ? (
-        <button
-          type="button"
-          aria-label="Close navigation"
-          className="fixed inset-0 z-30 bg-ink/50 lg:hidden"
-          onClick={() => setDrawerOpen(false)}
-        />
-      ) : null}
-
-      <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col bg-ink transition-transform duration-200 lg:sticky lg:top-0 lg:h-dvh lg:translate-x-0 ${
-          drawerOpen ? 'translate-x-0' : 'max-lg:invisible max-lg:-translate-x-full'
-        }`}
-      >
-        <div className="flex items-center justify-between px-5 py-5">
-          <BrandMark />
-          <button
-            type="button"
-            className="text-white lg:hidden"
-            aria-label="Close navigation"
-            onClick={() => setDrawerOpen(false)}
-          >
-            <X aria-hidden />
-          </button>
-        </div>
-
-        <nav aria-label="Main" className="flex-1 overflow-y-auto pb-4 pl-3">
-          {groups.map((group) => (
-            <div key={group.label} className="mb-3">
-              <h2 className="mb-1 px-3 font-sans text-sm tracking-normal text-ink-text/70">
-                {group.label}
-              </h2>
-              <ul className="flex flex-col gap-0.5">
-                {group.items.map((item) => (
-                  <li key={item.label}>
-                    <Link to={item.to} className="nav-tab" onClick={() => setDrawerOpen(false)}>
-                      <item.icon size={18} aria-hidden />
-                      {item.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </nav>
-
-        <div className="flex items-center justify-between gap-3 border-t border-ink-line px-5 py-3 text-sm">
-          <div className="min-w-0">
-            <p className="truncate font-medium text-white">{user.name}</p>
-            <p className="text-ink-text capitalize">{user.role}</p>
-          </div>
-          <button type="button" className="shrink-0 text-ink-text underline" onClick={signOut}>
-            Sign out
-          </button>
-        </div>
-      </aside>
-
-      <main className="min-w-0 flex-1 px-4 py-6 sm:px-8 sm:py-8">
-        <div className="mx-auto max-w-6xl">{children}</div>
-      </main>
-    </div>
+    <AppShell user={user} groups={visible} home="/dashboard">
+      {children}
+    </AppShell>
   )
 }

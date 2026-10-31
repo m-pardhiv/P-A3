@@ -165,6 +165,27 @@ describe('dashboard summary matches the records', () => {
   })
 })
 
+describe('revenue by month', () => {
+  it("lists the last six months, oldest first, with each month's payments", async () => {
+    const { revenueByMonth } = await summaryOf()
+
+    expect(revenueByMonth.map((point) => point.month)).toEqual([
+      '2025-10-01',
+      '2025-11-01',
+      '2025-12-01',
+      '2026-01-01',
+      '2026-02-01',
+      '2026-03-01',
+    ])
+    expect(revenueByMonth.map((point) => point.amount)).toEqual([0, 0, 0, 60000, 0, 18000])
+  })
+
+  it('follows the plan and customer filters but not the date range', async () => {
+    const forB = await summaryOf({ customerId: data.b.customer.id, from: '2026-03-01' })
+    expect(forB.revenueByMonth.map((point) => point.amount)).toEqual([0, 0, 0, 60000, 0, 0])
+  })
+})
+
 describe('dashboard filters', () => {
   it('narrows every number to one customer', async () => {
     const summary = await summaryOf({ customerId: data.b.customer.id })

@@ -35,13 +35,17 @@ function ForgotPasswordPage() {
             autoComplete="email"
             error={form.fieldErrors.email}
           />
-          <button type="submit" className="btn btn-primary" disabled={form.pending}>
+          <button
+            type="submit"
+            className="btn btn-primary mt-1 min-h-12 w-full text-[15px]"
+            disabled={form.pending}
+          >
             {form.pending ? 'Sending link' : 'Send reset link'}
           </button>
         </form>
       )}
       <p className="mt-6 text-sm">
-        <Link to="/login" className="text-ink underline">
+        <Link to="/login" className="link">
           Back to sign in
         </Link>
       </p>

@@ -24,3 +24,15 @@ export const daysBetween = (from: string, to: string) =>
 
 export const monthsBetween = (from: string, to: string) =>
   differenceInCalendarMonths(parseISO(to), parseISO(from))
+
+/** First day of the month a date falls in, as YYYY-MM-01. */
+export const monthStart = (date: string) => `${date.slice(0, 7)}-01`
+
+/**
+ * The last `count` calendar months ending with the one `today` is in, oldest first. Each is the
+ * month's first day, so it can be compared with a date column and used as a chart label.
+ */
+export function lastMonths(today: string, count: number) {
+  const first = monthStart(today)
+  return Array.from({ length: count }, (_, index) => addMonths(first, index - (count - 1)))
+}

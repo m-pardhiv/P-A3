@@ -1,3 +1,4 @@
+import { CheckCircle2, TriangleAlert } from 'lucide-react'
 import { createContext, type ReactNode, useCallback, useContext, useRef, useState } from 'react'
 
 type Tone = 'success' | 'danger'
@@ -29,8 +30,14 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toasts.map((toast) => (
           <p
             key={toast.id}
-            className={`rounded-control px-4 py-2.5 text-white ${toast.tone === 'success' ? 'bg-success' : 'bg-danger'}`}
+            role={toast.tone === 'danger' ? 'alert' : 'status'}
+            className="flex max-w-sm animate-fade-scale-in items-start gap-2.5 rounded-2xl border border-border/80 bg-card py-3 pr-4 pl-3.5 text-sm font-semibold shadow-lift"
           >
+            {toast.tone === 'success' ? (
+              <CheckCircle2 className="mt-px size-[18px] shrink-0 text-success" aria-hidden />
+            ) : (
+              <TriangleAlert className="mt-px size-[18px] shrink-0 text-danger" aria-hidden />
+            )}
             {toast.message}
           </p>
         ))}

@@ -11,7 +11,9 @@ import {
   CUSTOMER_ACTION_STATUSES,
   CUSTOMER_ACTIONS,
   customerForUser,
+  getOverview,
   getPortalSubscription,
+  listPortalPayments,
   listPortalSubscriptions,
   saveProfile,
 } from '~/server/portal'
@@ -23,6 +25,7 @@ import {
   portalActionSchema,
   portalInvoiceListSchema,
   portalListSchema,
+  portalSubscriptionListSchema,
   profileSchema,
 } from '~/shared/schemas/portal'
 
@@ -35,10 +38,10 @@ async function requireCustomer() {
 }
 
 export const listMySubscriptions = createServerFn({ method: 'GET' })
-  .validator(portalListSchema)
+  .validator(portalSubscriptionListSchema)
   .handler(async ({ data }) => {
     const { customer } = await requireCustomer()
-    return listPortalSubscriptions(db, customer.id, data.page)
+    return listPortalSubscriptions(db, customer.id, data.page, data.group)
   })
 
 export const getMySubscription = createServerFn({ method: 'GET' })
@@ -124,3 +127,15 @@ export const listAvailablePlans = createServerFn({ method: 'GET' }).handler(asyn
       })),
   }
 })
+
+export const getMyOverview = createServerFn({ method: 'GET' }).handler(async () => {
+  const { customer } = await requireCustomer()
+  return { ...(await getOverview(db, customer.id)), customerName: customer.name }
+})
+
+export const listMyPayments = createServerFn({ method: 'GET' })
+  .validator(portalListSchema)
+  .handler(async ({ data }) => {
+    const { customer } = await requireCustomer()
+    return listPortalPayments(db, customer.id, data.page)
+  })

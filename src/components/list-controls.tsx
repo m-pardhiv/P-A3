@@ -59,7 +59,7 @@ export function DateFilter(props: {
   onChange: (value: string | undefined) => void
 }) {
   return (
-    <label className="flex items-center gap-2 text-sm text-muted">
+    <label className="flex items-center gap-2 text-sm text-muted-foreground">
       {props.label}
       <input
         key={props.value}

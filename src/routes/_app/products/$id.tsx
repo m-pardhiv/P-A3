@@ -68,7 +68,7 @@ function ProductPage() {
 
         <section className="panel">
           <h2 className="mb-1 text-xl font-semibold">Variants</h2>
-          <p className="mb-4 text-sm text-muted">
+          <p className="mb-4 text-sm text-muted-foreground">
             A line's unit price is the sales price plus the variant's extra price.
           </p>
           {data.variants.length ? (
@@ -103,7 +103,7 @@ function ProductPage() {
               ))}
             </ul>
           ) : (
-            <p className="mb-4 text-muted">This product has no variants yet.</p>
+            <p className="mb-4 text-muted-foreground">This product has no variants yet.</p>
           )}
 
           {canEdit ? (

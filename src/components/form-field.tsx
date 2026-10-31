@@ -19,7 +19,7 @@ function FieldShell(props: {
   const { id, label, required, error, hint, children } = props
   return (
     <div className="flex min-w-0 flex-col gap-1">
-      <label htmlFor={id} className="text-sm font-medium">
+      <label htmlFor={id} className="text-[13px] font-semibold text-foreground">
         {label}
         {required ? (
           <span aria-hidden className="text-danger">
@@ -30,11 +30,11 @@ function FieldShell(props: {
       </label>
       {children}
       {error ? (
-        <p id={`${id}-error`} className="text-sm text-danger">
+        <p id={`${id}-error`} role="alert" className="text-xs font-medium text-destructive">
           {error}
         </p>
       ) : hint ? (
-        <p id={`${id}-hint`} className="text-sm text-muted">
+        <p id={`${id}-hint`} className="text-xs text-muted-foreground">
           {hint}
         </p>
       ) : null}
@@ -109,11 +109,11 @@ export function CheckboxField(props: InputHTMLAttributes<HTMLInputElement> & Fie
         {label}
       </label>
       {error ? (
-        <p id={`${id}-error`} className="text-sm text-danger">
+        <p id={`${id}-error`} role="alert" className="text-xs font-medium text-destructive">
           {error}
         </p>
       ) : hint ? (
-        <p id={`${id}-hint`} className="pl-6 text-sm text-muted">
+        <p id={`${id}-hint`} className="pl-6 text-sm text-muted-foreground">
           {hint}
         </p>
       ) : null}

@@ -25,6 +25,15 @@ The app connects as `brightloop`, which owns the database, and never as the `pos
 The tests use `brightloop_test` and refuse to run against any database whose name does not end in
 `_test`, so they cannot touch your demo data.
 
+## Design
+
+The interface follows the Brightloop design: a warm cream canvas, ember-to-raspberry brand gradient,
+Plus Jakarta Sans, a collapsible sidebar, and cards with soft shadows. Everything is defined once in
+`src/styles.css` (colours, radii, shadows) and the shared components in `src/components/ui`,
+`src/components/design` and `src/components/shell`. Customers get an overview, subscription cards
+with a timeline, paper-style invoices, payment history, plans and their account. Staff and admins
+get the console, with the dashboard as its home.
+
 ## Demo accounts
 
 The password for every account is `Brightloop@2026`.
@@ -34,6 +43,9 @@ The password for every account is `Brightloop@2026`.
 | Admin    | `admin@brightloop.example`                                      |
 | Staff    | `staff@brightloop.example`                                      |
 | Customer | `asha@`, `vikram@`, `neha@`, `arjun@`, `priya@customer.example` |
+
+The sign-in page offers these as one-click "Use" buttons while demonstrating. They show in
+development and are hidden when `NODE_ENV=production`, unless `SHOW_DEMO_LOGINS=true`.
 
 These passwords are public. Do not seed them into a database other people can reach, or change
 them first.

@@ -23,3 +23,32 @@ export const formatDateTime = (value: Date | string) => dateTimeFormat.format(ne
 
 /** `bank_transfer` becomes "Bank transfer". */
 export const humanize = (value: string) => capitalize(value.replaceAll('_', ' '))
+
+const hourInIndia = new Intl.DateTimeFormat('en-GB', {
+  hour: '2-digit',
+  hourCycle: 'h23',
+  timeZone: 'Asia/Kolkata',
+})
+
+/** "Good morning", by the hour in India, matching how the business dates are kept. */
+export function greetingForNow(now = new Date()) {
+  const hour = Number(hourInIndia.format(now))
+  if (hour < 12) return 'Good morning'
+  if (hour < 18) return 'Good afternoon'
+  return 'Good evening'
+}
+
+/** Whole days from today to a date, negative when it has passed. */
+export function daysFromNow(date: string, today: string) {
+  const ms = Date.parse(`${date}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)
+  return Math.round(ms / 86_400_000)
+}
+
+/** "18 days", "Today", "Tomorrow", "3 days ago". */
+export function relativeDays(date: string, today: string) {
+  const days = daysFromNow(date, today)
+  if (days === 0) return 'Today'
+  if (days === 1) return 'Tomorrow'
+  if (days === -1) return 'Yesterday'
+  return days > 0 ? `in ${days} days` : `${-days} days ago`
+}

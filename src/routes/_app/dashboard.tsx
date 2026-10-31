@@ -1,12 +1,19 @@
 import { queryOptions, useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
+import { motion } from 'framer-motion'
+import { CircleDollarSign, Layers, TrendingUp, TriangleAlert, Wallet } from 'lucide-react'
 import type { z } from 'zod'
 import { DataTable } from '~/components/data-table'
+import { MonthlyBarChart } from '~/components/design/charts'
+import { StatCard } from '~/components/design/stat-card'
 import { EmptyState } from '~/components/empty-state'
 import { DateFilter, FilterSelect } from '~/components/list-controls'
 import { PageHeader } from '~/components/page-header'
+import { WelcomeHero } from '~/components/portal/welcome-hero'
 import { StatusBadge } from '~/components/status-badge'
+import { Card, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
 import { capitalize, formatDate, formatMoney, humanize } from '~/lib/format'
+import { staggerContainer } from '~/lib/motion'
 import { formOptionsQuery } from '~/lib/queries'
 import {
   getDashboardInvoices,
@@ -74,20 +81,6 @@ export const Route = createFileRoute('/_app/dashboard')({
   component: DashboardPage,
 })
 
-function Stat(props: { label: string; value: string; hint: string; tone?: 'danger' }) {
-  return (
-    <div className="panel">
-      <p className="text-sm text-muted">{props.label}</p>
-      <p
-        className={`tabular mt-1 font-display text-3xl font-semibold ${props.tone === 'danger' ? 'text-danger' : 'text-ink'}`}
-      >
-        {props.value}
-      </p>
-      <p className="mt-1 text-sm text-muted">{props.hint}</p>
-    </div>
-  )
-}
-
 function plural(count: number, one: string) {
   return `${count} ${count === 1 ? one : `${one}s`}`
 }
@@ -95,6 +88,7 @@ function plural(count: number, one: string) {
 function DashboardPage() {
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
+  const { user } = Route.useRouteContext()
   const { data: summary } = useSuspenseQuery(summaryQuery(search))
   const { data: payments } = useSuspenseQuery(paymentsQuery(search))
   const { data: overdue } = useSuspenseQuery(overdueQuery(search))
@@ -120,10 +114,22 @@ function DashboardPage() {
 
   return (
     <>
-      <PageHeader
-        title="Dashboard"
-        description="Where subscriptions, revenue and money owed stand today."
-      />
+      <h1 className="sr-only">Dashboard</h1>
+      <div className="mb-6">
+        <WelcomeHero
+          today={summary.today}
+          eyebrow={user.role === 'admin' ? 'Admin console' : 'Staff console'}
+          firstName={user.name.split(' ')[0]}
+          message="Where subscriptions, revenue and money owed stand today."
+          chip={`${plural(summary.activeSubscriptions, 'subscription')} running`}
+          attention={{
+            count: summary.overdueCount,
+            singular: 'invoice is overdue',
+            plural: 'invoices are overdue',
+            allGood: 'Nothing is overdue',
+          }}
+        />
+      </div>
 
       <section aria-label="Filters" className="panel mb-6">
         <div className="flex flex-wrap items-center gap-2">
@@ -174,64 +180,98 @@ function DashboardPage() {
             </button>
           ) : null}
         </div>
-        <p className="mt-2 text-sm text-muted">
+        <p className="mt-2 text-sm text-muted-foreground">
           The date range narrows revenue and payments. Plan and customer narrow every number. Status
           narrows the subscriptions table.
         </p>
       </section>
 
-      <section aria-label="Summary" className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Stat
+      <motion.section
+        aria-label="Summary"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="show"
+        className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5"
+      >
+        <StatCard
+          icon={Layers}
           label="Active subscriptions"
-          value={String(summary.activeSubscriptions)}
+          value={summary.activeSubscriptions}
           hint="Running right now"
         />
-        <Stat
+        <StatCard
+          icon={TrendingUp}
           label="Monthly recurring revenue"
           value={formatMoney(summary.mrr)}
-          hint="Active plans, scaled to one month, before tax"
+          hint="Active plans, per month, before tax"
         />
-        <Stat
+        <StatCard
+          icon={Wallet}
           label="Revenue collected"
           value={formatMoney(summary.revenue)}
           hint={`${formatDate(summary.from)} to ${formatDate(summary.to)}`}
         />
-        <Stat
+        <StatCard
+          icon={CircleDollarSign}
           label="Outstanding"
           value={formatMoney(summary.outstanding)}
           hint="Owed on confirmed invoices"
         />
-        <Stat
+        <StatCard
+          icon={TriangleAlert}
+          tone={summary.overdueCount > 0 ? 'warn' : 'brand'}
           label="Overdue"
           value={formatMoney(summary.overdueAmount)}
           hint={`${plural(summary.overdueCount, 'invoice')} past due`}
-          tone={summary.overdueCount > 0 ? 'danger' : undefined}
         />
-      </section>
+      </motion.section>
 
-      <section aria-label="Overdue ageing" className="panel mb-6">
-        <h2 className="mb-1 text-xl font-semibold">How late the overdue invoices are</h2>
-        <p className="mb-4 text-sm text-muted">Days since the due date, by amount still owed.</p>
-        <ul className="flex flex-col gap-3">
-          {summary.ageing.map((bucket) => (
-            <li
-              key={bucket.label}
-              className="grid items-center gap-x-4 gap-y-1 sm:grid-cols-[10rem_1fr_16rem]"
-            >
-              <span className="font-medium">{bucket.label}</span>
-              <span className="h-3 overflow-hidden rounded-full bg-neutral-soft" aria-hidden>
-                <span
-                  className="block h-full rounded-full bg-danger"
-                  style={{ width: `${(bucket.amount / largestBucket) * 100}%` }}
-                />
-              </span>
-              <span className="tabular text-sm sm:text-right">
-                {formatMoney(bucket.amount)} across {plural(bucket.count, 'invoice')}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <div className="mb-8 grid gap-6 lg:grid-cols-12">
+        <Card className="min-w-0 lg:col-span-7">
+          <CardHeader>
+            <CardTitle className="text-lg">Revenue by month</CardTitle>
+            <CardDescription>Payments received, last 6 months</CardDescription>
+          </CardHeader>
+          <div className="px-3 pb-5 sm:px-5">
+            <MonthlyBarChart
+              data={summary.revenueByMonth}
+              label="Bar chart of payments received in each of the last six months"
+              caption="Received this month"
+              height={240}
+            />
+          </div>
+        </Card>
+
+        <section aria-label="Overdue ageing" className="min-w-0 lg:col-span-5">
+          <Card className="h-full">
+            <CardHeader>
+              <CardTitle className="text-lg">How late the overdue invoices are</CardTitle>
+              <CardDescription>Days since the due date, by amount still owed.</CardDescription>
+            </CardHeader>
+            <ul className="flex flex-col gap-5 px-5 pb-6 sm:px-6">
+              {summary.ageing.map((bucket) => (
+                <li key={bucket.label}>
+                  <div className="mb-1.5 flex items-baseline justify-between gap-3 text-sm">
+                    <span className="font-semibold">{bucket.label}</span>
+                    <span className="tabular text-muted-foreground">
+                      {formatMoney(bucket.amount)} · {plural(bucket.count, 'invoice')}
+                    </span>
+                  </div>
+                  <span
+                    className="block h-2.5 overflow-hidden rounded-full bg-secondary"
+                    aria-hidden
+                  >
+                    <span
+                      className="block h-full rounded-full bg-brand-gradient"
+                      style={{ width: `${(bucket.amount / largestBucket) * 100}%` }}
+                    />
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        </section>
+      </div>
 
       <div className="flex flex-col gap-8">
         <section>

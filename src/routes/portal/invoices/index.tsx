@@ -2,8 +2,8 @@ import { queryOptions, useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import type { z } from 'zod'
 import { DataTable } from '~/components/data-table'
+import { PillTabs } from '~/components/design/pill-tabs'
 import { EmptyState } from '~/components/empty-state'
-import { FilterSelect } from '~/components/list-controls'
 import { PageHeader } from '~/components/page-header'
 import { StatusBadge } from '~/components/status-badge'
 import { formatDate, formatMoney } from '~/lib/format'
@@ -37,15 +37,10 @@ function MyInvoicesPage() {
         title="My Invoices"
         description="What you have been billed, and what is still to pay."
       />
-      <div className="mb-4">
-        <FilterSelect
-          label="All invoices"
-          value={search.overdue ? 'overdue' : search.status}
-          options={[
-            { value: 'confirmed', label: 'To pay' },
-            { value: 'overdue', label: 'Overdue' },
-            { value: 'paid', label: 'Paid' },
-          ]}
+      <div className="mb-5">
+        <PillTabs
+          label="Filter invoices"
+          value={search.overdue ? 'overdue' : (search.status ?? 'all')}
           onChange={(value) =>
             navigate({
               search: {
@@ -55,6 +50,12 @@ function MyInvoicesPage() {
               },
             })
           }
+          tabs={[
+            { value: 'all', label: 'All' },
+            { value: 'confirmed', label: 'To pay' },
+            { value: 'overdue', label: 'Overdue' },
+            { value: 'paid', label: 'Paid' },
+          ]}
         />
       </div>
       <DataTable

@@ -168,7 +168,7 @@ function NewSubscriptionPage() {
 
         <section className="panel">
           <h2 className="mb-1 text-xl font-semibold">Product lines</h2>
-          <p className="mb-4 text-sm text-muted">
+          <p className="mb-4 text-sm text-muted-foreground">
             The plan's base fee is the first line. These are added on top.
           </p>
           <LineEditor

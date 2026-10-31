@@ -1,5 +1,5 @@
 const toneClasses = {
-  neutral: 'bg-neutral-soft text-neutral',
+  neutral: 'bg-secondary text-secondary-foreground',
   info: 'bg-info-soft text-info',
   success: 'bg-success-soft text-success',
   warning: 'bg-warning-soft text-warning',
@@ -11,11 +11,12 @@ const statusTones: Record<string, keyof typeof toneClasses> = {
   quotation: 'info',
   confirmed: 'info',
   active: 'success',
-  paused: 'warning',
+  paused: 'info',
   closed: 'neutral',
   paid: 'success',
   cancelled: 'neutral',
   overdue: 'danger',
+  'to pay': 'warning',
   admin: 'info',
   staff: 'neutral',
   inactive: 'neutral',
@@ -24,11 +25,13 @@ const statusTones: Record<string, keyof typeof toneClasses> = {
   'used up': 'warning',
 }
 
+/** A status as a small pill with a dot, so the meaning never rests on colour alone. */
 export function StatusBadge({ status }: { status: string }) {
   return (
     <span
-      className={`inline-flex rounded-full px-2.5 py-0.5 text-sm font-medium capitalize ${toneClasses[statusTones[status] ?? 'neutral']}`}
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold leading-none capitalize ${toneClasses[statusTones[status] ?? 'neutral']}`}
     >
+      <span className="size-1.5 rounded-full bg-current" aria-hidden />
       {status}
     </span>
   )

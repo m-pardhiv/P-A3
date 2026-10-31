@@ -49,13 +49,17 @@ function SignupPage() {
           hint="More than 8 characters, with an uppercase letter, a lowercase letter and a special character."
           error={form.fieldErrors.password}
         />
-        <button type="submit" className="btn btn-primary" disabled={form.pending}>
+        <button
+          type="submit"
+          className="btn btn-primary mt-1 min-h-12 w-full text-[15px]"
+          disabled={form.pending}
+        >
           {form.pending ? 'Creating account' : 'Create account'}
         </button>
       </form>
       <p className="mt-6 text-sm">
         Already have an account?{' '}
-        <Link to="/login" className="text-ink underline">
+        <Link to="/login" className="link">
           Sign in
         </Link>
       </p>

@@ -199,7 +199,9 @@ function InvoicePage() {
                     {reminder.sentByName ? ` by ${reminder.sentByName}` : ''}
                     {reminder.error ? ` (${reminder.error})` : ''}
                   </span>
-                  <span className="text-sm text-muted">{formatDateTime(reminder.createdAt)}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {formatDateTime(reminder.createdAt)}
+                  </span>
                 </li>
               ))}
             </ul>

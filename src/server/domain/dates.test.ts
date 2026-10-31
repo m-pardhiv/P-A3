@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { addDays, addMonths, addYears, daysBetween } from './dates'
+import { addDays, addMonths, addYears, daysBetween, lastMonths, monthStart } from './dates'
 
 describe('business dates', () => {
   it('adds days across month and year ends, and leap days', () => {
@@ -24,5 +24,22 @@ describe('business dates', () => {
   it('counts calendar days between two dates', () => {
     expect(daysBetween('2026-03-01', '2026-03-31')).toBe(30)
     expect(daysBetween('2026-03-31', '2026-03-01')).toBe(-30)
+  })
+})
+
+describe('months for a chart', () => {
+  it("starts a date's month on the first", () => {
+    expect(monthStart('2026-03-15')).toBe('2026-03-01')
+  })
+
+  it('lists the last six months, oldest first, across a year end', () => {
+    expect(lastMonths('2026-02-10', 6)).toEqual([
+      '2025-09-01',
+      '2025-10-01',
+      '2025-11-01',
+      '2025-12-01',
+      '2026-01-01',
+      '2026-02-01',
+    ])
   })
 })

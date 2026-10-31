@@ -33,7 +33,7 @@ function ProfilePage() {
 
   return (
     <div className="max-w-2xl">
-      <PageHeader title="Profile" description="The details Brightloop uses on your invoices." />
+      <PageHeader title="My Account" description="The details Brightloop uses on your invoices." />
       <form onSubmit={form.onSubmit} method="post" noValidate className="panel flex flex-col gap-4">
         <FormError message={form.formError} />
         <FormField

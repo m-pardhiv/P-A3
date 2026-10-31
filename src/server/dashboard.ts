@@ -1,4 +1,4 @@
-import { and, between, count, desc, eq, gt, lt, type SQL, sql } from 'drizzle-orm'
+import { and, between, count, desc, eq, gt, gte, lt, type SQL, sql } from 'drizzle-orm'
 import type { Executor } from '~/db/client'
 import {
   customers,
@@ -12,7 +12,7 @@ import {
 import type { DashboardFilters } from '~/shared/schemas/dashboard'
 import { PAGE_SIZE } from '~/shared/schemas/pagination'
 import { clock } from './clock'
-import { addDays } from './domain/dates'
+import { addDays, lastMonths } from './domain/dates'
 
 export type ResolvedFilters = DashboardFilters & {
   from: string
@@ -100,12 +100,38 @@ export function owedSql(f: ResolvedFilters) {
 
 type Row = Record<string, number | string>
 
+/** Payments received in each of the last six months, narrowed by plan and customer only. */
+export async function getRevenueByMonth(database: Executor, f: ResolvedFilters) {
+  const months = lastMonths(f.today, 6)
+  const rows = await database
+    .select({
+      month: sql<string>`to_char(date_trunc('month', ${payments.paidOn}), 'YYYY-MM-01')`,
+      amount: sql<number>`sum(${payments.amount})::bigint`.mapWith(Number),
+    })
+    .from(payments)
+    .innerJoin(invoices, eq(invoices.id, payments.invoiceId))
+    .innerJoin(subscriptions, eq(subscriptions.id, invoices.subscriptionId))
+    .where(
+      and(
+        gte(payments.paidOn, months[0]),
+        f.planId ? eq(subscriptions.planId, f.planId) : undefined,
+        f.customerId ? eq(invoices.customerId, f.customerId) : undefined,
+      ),
+    )
+    .groupBy(sql`date_trunc('month', ${payments.paidOn})`)
+  return months.map((month) => ({
+    month,
+    amount: rows.find((row) => row.month === month)?.amount ?? 0,
+  }))
+}
+
 export async function getSummary(database: Executor, filters: DashboardFilters) {
   const f = resolveFilters(filters)
-  const [[active], [revenue], [owed]] = await Promise.all([
+  const [[active], [revenue], [owed], revenueByMonth] = await Promise.all([
     database.execute<Row>(activeAndMrrSql(f)),
     database.execute<Row>(revenueSql(f)),
     database.execute<Row>(owedSql(f)),
+    getRevenueByMonth(database, f),
   ])
   const n = (value: number | string) => Number(value)
 
@@ -116,6 +142,7 @@ export async function getSummary(database: Executor, filters: DashboardFilters) 
     activeSubscriptions: n(active.active_subscriptions),
     mrr: n(active.mrr),
     revenue: n(revenue.revenue),
+    revenueByMonth,
     outstanding: n(owed.outstanding),
     overdueCount: n(owed.overdue_count),
     overdueAmount: n(owed.overdue_amount),

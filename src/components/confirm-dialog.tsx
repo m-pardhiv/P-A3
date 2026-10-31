@@ -21,10 +21,10 @@ export function ConfirmDialog(props: {
     <dialog
       ref={dialog}
       onClose={props.onCancel}
-      className="m-auto w-[calc(100%-2rem)] max-w-md rounded-panel border border-line bg-surface p-6 text-text backdrop:bg-ink/50"
+      className="m-auto w-[calc(100%-2rem)] max-w-md rounded-card border border-border/80 bg-card p-6 text-foreground shadow-lift backdrop:bg-foreground/35 backdrop:backdrop-blur-sm"
     >
-      <h2 className="text-xl font-semibold">{props.title}</h2>
-      <p className="mt-2 text-muted">{props.message}</p>
+      <h2 className="text-xl font-extrabold tracking-tight">{props.title}</h2>
+      <p className="mt-2 text-muted-foreground">{props.message}</p>
       <div className="mt-6 flex justify-end gap-2">
         <button type="button" className="btn btn-secondary" onClick={props.onCancel}>
           {props.confirmTone === 'primary' ? 'Cancel' : 'Keep it'}

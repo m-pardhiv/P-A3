@@ -22,6 +22,7 @@ import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppPaymentsRouteImport } from './routes/_app/payments'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as PortalIndexRouteImport } from './routes/portal/index'
+import { Route as PortalPaymentsRouteImport } from './routes/portal/payments'
 import { Route as PortalPlansRouteImport } from './routes/portal/plans'
 import { Route as PortalProfileRouteImport } from './routes/portal/profile'
 import { Route as AppAdminDiscountsRouteImport } from './routes/_app/_admin/discounts'
@@ -113,6 +114,11 @@ const ApiHealthRoute = ApiHealthRouteImport.update({
 const PortalIndexRoute = PortalIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => PortalRoute,
+} as any)
+const PortalPaymentsRoute = PortalPaymentsRouteImport.update({
+  id: '/payments',
+  path: '/payments',
   getParentRoute: () => PortalRoute,
 } as any)
 const PortalPlansRoute = PortalPlansRouteImport.update({
@@ -275,6 +281,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AppDashboardRoute
   '/payments': typeof AppPaymentsRoute
   '/api/health': typeof ApiHealthRoute
+  '/portal/payments': typeof PortalPaymentsRoute
   '/portal/plans': typeof PortalPlansRoute
   '/portal/profile': typeof PortalProfileRoute
   '/portal/': typeof PortalIndexRoute
@@ -316,6 +323,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AppDashboardRoute
   '/payments': typeof AppPaymentsRoute
   '/api/health': typeof ApiHealthRoute
+  '/portal/payments': typeof PortalPaymentsRoute
   '/portal/plans': typeof PortalPlansRoute
   '/portal/profile': typeof PortalProfileRoute
   '/portal': typeof PortalIndexRoute
@@ -361,6 +369,7 @@ export interface FileRoutesById {
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/payments': typeof AppPaymentsRoute
   '/api/health': typeof ApiHealthRoute
+  '/portal/payments': typeof PortalPaymentsRoute
   '/portal/plans': typeof PortalPlansRoute
   '/portal/profile': typeof PortalProfileRoute
   '/portal/': typeof PortalIndexRoute
@@ -405,6 +414,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/payments'
     | '/api/health'
+    | '/portal/payments'
     | '/portal/plans'
     | '/portal/profile'
     | '/portal/'
@@ -446,6 +456,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/payments'
     | '/api/health'
+    | '/portal/payments'
     | '/portal/plans'
     | '/portal/profile'
     | '/portal'
@@ -490,6 +501,7 @@ export interface FileRouteTypes {
     | '/_app/dashboard'
     | '/_app/payments'
     | '/api/health'
+    | '/portal/payments'
     | '/portal/plans'
     | '/portal/profile'
     | '/portal/'
@@ -626,6 +638,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/portal/'
       preLoaderRoute: typeof PortalIndexRouteImport
+      parentRoute: typeof PortalRoute
+    }
+    '/portal/payments': {
+      id: '/portal/payments'
+      path: '/payments'
+      fullPath: '/portal/payments'
+      preLoaderRoute: typeof PortalPaymentsRouteImport
       parentRoute: typeof PortalRoute
     }
     '/portal/plans': {
@@ -903,6 +922,7 @@ const AppRouteChildren: AppRouteChildren = {
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 interface PortalRouteChildren {
+  PortalPaymentsRoute: typeof PortalPaymentsRoute
   PortalPlansRoute: typeof PortalPlansRoute
   PortalProfileRoute: typeof PortalProfileRoute
   PortalIndexRoute: typeof PortalIndexRoute
@@ -913,6 +933,7 @@ interface PortalRouteChildren {
 }
 
 const PortalRouteChildren: PortalRouteChildren = {
+  PortalPaymentsRoute: PortalPaymentsRoute,
   PortalPlansRoute: PortalPlansRoute,
   PortalProfileRoute: PortalProfileRoute,
   PortalIndexRoute: PortalIndexRoute,

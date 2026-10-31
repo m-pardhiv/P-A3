@@ -35,7 +35,7 @@ function PlansPage() {
                 <h2 className="text-xl font-semibold">{plan.name}</h2>
                 <p className="tabular text-2xl font-semibold text-ink">
                   {formatMoney(plan.price)}{' '}
-                  <span className="text-base font-normal text-muted">
+                  <span className="text-base font-normal text-muted-foreground">
                     {capitalize(plan.billingPeriod).toLowerCase()}
                   </span>
                 </p>
@@ -66,7 +66,9 @@ function PlansPage() {
                 ) : null}
               </ul>
               {plan.availableTo ? (
-                <p className="text-sm text-muted">Available until {formatDate(plan.availableTo)}</p>
+                <p className="text-sm text-muted-foreground">
+                  Available until {formatDate(plan.availableTo)}
+                </p>
               ) : null}
             </li>
           ))}

@@ -13,6 +13,8 @@ const schema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
   MAIL_FROM: z.string().default('Brightloop <billing@brightloop.example>'),
+  // Show the demo accounts on the sign-in page. Defaults to on in development and off in production.
+  SHOW_DEMO_LOGINS: z.enum(['true', 'false']).optional(),
   // Set to true only behind a reverse proxy you control, so client addresses come from X-Forwarded-For.
   TRUST_PROXY: z.enum(['true', 'false']).default('false'),
   // The daily billing job. Switch it off to run billing only from the Billing page.
